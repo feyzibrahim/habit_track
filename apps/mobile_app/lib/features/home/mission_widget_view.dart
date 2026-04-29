@@ -1,6 +1,6 @@
+import 'package:ezucute/core/models/goal_model.dart';
+import 'package:ezucute/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
-import 'package:habit_builder/core/theme/app_colors.dart';
-import 'package:habit_builder/core/models/goal_model.dart';
 
 class MissionWidgetView extends StatelessWidget {
   final Goal goal;
@@ -95,12 +95,19 @@ class MissionWidgetView extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+                  color: isDark
+                      ? AppColors.darkSurface
+                      : AppColors.lightSurface,
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                    color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                    color: isDark
+                        ? AppColors.darkBorder
+                        : AppColors.lightBorder,
                   ),
                 ),
                 child: Row(
@@ -123,9 +130,14 @@ class MissionWidgetView extends StatelessWidget {
                     ),
                     if (nextTask!.type == 'habit')
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.1,
+                          ),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
@@ -150,6 +162,79 @@ class MissionWidgetView extends StatelessWidget {
                   ),
                 ),
               ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class MinimalMissionWidgetView extends StatelessWidget {
+  final int score;
+
+  const MinimalMissionWidgetView({super.key, required this.score});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    final int level = (score ~/ 100) + 1;
+    final double levelProgress = (score % 100) / 100.0;
+
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: Container(
+        width: 160,
+        height: 160,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: theme.scaffoldBackgroundColor,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+            width: 2,
+          ),
+        ),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            SizedBox(
+              width: 110,
+              height: 110,
+              child: CircularProgressIndicator(
+                value: levelProgress == 0 ? 0.05 : levelProgress,
+                strokeWidth: 10,
+                backgroundColor: theme.colorScheme.primary.withValues(
+                  alpha: 0.1,
+                ),
+                color: theme.colorScheme.primary,
+                strokeCap: StrokeCap.round,
+              ),
+            ),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  "LVL $level",
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    color: theme.colorScheme.primary,
+                    fontSize: 22,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  "$score XP",
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.0,
+                    fontSize: 10,
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),

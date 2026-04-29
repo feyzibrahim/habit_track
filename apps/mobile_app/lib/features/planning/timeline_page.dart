@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:habit_builder/data/app_data_store.dart';
-import 'package:habit_builder/core/models/goal_model.dart';
-import 'package:habit_builder/core/theme/app_colors.dart';
+import 'package:ezucute/data/app_data_store.dart';
+import 'package:ezucute/core/models/goal_model.dart';
+import 'package:ezucute/core/theme/app_colors.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:habit_builder/features/chat/chat_page.dart';
+import 'package:ezucute/features/chat/chat_page.dart';
 
 class TimelinePage extends StatelessWidget {
   const TimelinePage({super.key});
@@ -17,6 +17,7 @@ class TimelinePage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Roadmap'), centerTitle: true),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'timeline_fab',
         onPressed: () {
           Navigator.push(
             context,

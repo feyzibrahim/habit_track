@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:habit_builder/core/theme/app_colors.dart';
+import 'package:ezucute/core/theme/app_colors.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 class RoadmapPreviewPage extends StatefulWidget {
@@ -39,7 +39,7 @@ class _RoadmapPreviewPageState extends State<RoadmapPreviewPage> {
   Future<void> _handleRefine() async {
     final prompt = _refinementController.text.trim();
     if (prompt.isEmpty) return;
-    
+
     setState(() => _isLoading = true);
     try {
       final newResult = await widget.onRefine(prompt);
@@ -67,7 +67,9 @@ class _RoadmapPreviewPageState extends State<RoadmapPreviewPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final plan = _aiResult['plan'];
-    final milestones = plan != null ? List<dynamic>.from(plan['milestones'] ?? []) : [];
+    final milestones = plan != null
+        ? List<dynamic>.from(plan['milestones'] ?? [])
+        : [];
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -85,24 +87,33 @@ class _RoadmapPreviewPageState extends State<RoadmapPreviewPage> {
               itemCount: milestones.length,
               itemBuilder: (context, index) {
                 final milestone = milestones[index];
-                return _buildTimelineItem(context, milestone, index, index == milestones.length - 1);
+                return _buildTimelineItem(
+                  context,
+                  milestone,
+                  index,
+                  index == milestones.length - 1,
+                );
               },
             ),
           ),
-          
+
           // Refinement and Initialize actions
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: theme.scaffoldBackgroundColor,
-              border: Border(top: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1))),
+              border: Border(
+                top: BorderSide(
+                  color: theme.dividerColor.withValues(alpha: 0.1),
+                ),
+              ),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, -5),
-                )
-              ]
+                ),
+              ],
             ),
             child: SafeArea(
               child: Column(
@@ -114,13 +125,18 @@ class _RoadmapPreviewPageState extends State<RoadmapPreviewPage> {
                     onPressed: _isLoading ? null : _handleInitialize,
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 64),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
                     ),
                     child: _isLoading
                         ? const SizedBox(
                             width: 24,
                             height: 24,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
                           )
                         : Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -142,152 +158,162 @@ class _RoadmapPreviewPageState extends State<RoadmapPreviewPage> {
 
   Widget _buildRefinementInput(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.cardTheme.color,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: _refinementController,
-              decoration: InputDecoration(
-                hintText: "Change anything? (e.g. Make it harder)",
-                hintStyle: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
-                ),
-                border: InputBorder.none,
-              ),
-            ),
-          ),
-          IconButton(
-            icon: Icon(LucideIcons.refreshCw, color: theme.colorScheme.primary),
-            onPressed: _isLoading ? null : _handleRefine,
-          )
-        ],
+    return TextField(
+      controller: _refinementController,
+      decoration: InputDecoration(
+        hintText: "Change anything? (e.g. Make it harder)",
+        hintStyle: theme.textTheme.bodyMedium?.copyWith(
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+        ),
+        suffixIcon: IconButton(
+          icon: Icon(LucideIcons.refreshCw, color: theme.colorScheme.primary),
+          onPressed: _isLoading ? null : _handleRefine,
+        ),
       ),
     );
   }
 
-  Widget _buildTimelineItem(BuildContext context, Map<String, dynamic> milestone, int index, bool isLast) {
+  Widget _buildTimelineItem(
+    BuildContext context,
+    Map<String, dynamic> milestone,
+    int index,
+    bool isLast,
+  ) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final order = milestone['weeks_from_start'] ?? (index + 1);
     final isCurrent = index == 0; // In preview, first item is "current"
 
     return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Column(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: isCurrent
-                      ? theme.colorScheme.primary
-                      : Colors.transparent,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: isCurrent
-                        ? theme.colorScheme.primary
-                        : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
-                    width: 2,
-                  ),
-                ),
-                child: Center(
-                  child: Text(
-                    order.toString(),
-                    style: TextStyle(
-                      color: isCurrent
-                          ? Colors.white
-                          : theme.colorScheme.onSurface.withValues(alpha: 0.3),
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-              ),
-              if (!isLast)
-                Expanded(
-                  child: Container(
-                    width: 2,
-                    color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-                    margin: const EdgeInsets.symmetric(vertical: 8),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(width: 20),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 40),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              Column(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "PHASE $order",
-                        style: theme.textTheme.labelSmall?.copyWith(
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: isCurrent
+                          ? theme.colorScheme.primary
+                          : Colors.transparent,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isCurrent
+                            ? theme.colorScheme.primary
+                            : (isDark
+                                  ? AppColors.darkBorder
+                                  : AppColors.lightBorder),
+                        width: 2,
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        order.toString(),
+                        style: TextStyle(
                           color: isCurrent
-                              ? theme.colorScheme.primary
-                              : theme.colorScheme.onSurface.withValues(alpha: 0.3),
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1.0,
+                              ? Colors.white
+                              : theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.3,
+                                ),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
                         ),
                       ),
-                      if (isCurrent) _buildCurrentBadge(context),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    milestone['title'] ?? 'Milestone',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    milestone['description'] ?? '',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-                      height: 1.5,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  if (milestone['action_items'] != null)
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: theme.cardTheme.color,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: (milestone['action_items'] as List<dynamic>).map((action) {
-                          return _buildActionMiniRow(context, action);
-                        }).toList(),
+                  if (!isLast)
+                    Expanded(
+                      child: Container(
+                        width: 2,
+                        color: isDark
+                            ? AppColors.darkBorder
+                            : AppColors.lightBorder,
+                        margin: const EdgeInsets.symmetric(vertical: 8),
                       ),
                     ),
                 ],
               ),
-            ),
+              const SizedBox(width: 20),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 40),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "PHASE $order",
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: isCurrent
+                                  ? theme.colorScheme.primary
+                                  : theme.colorScheme.onSurface.withValues(
+                                      alpha: 0.3,
+                                    ),
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1.0,
+                            ),
+                          ),
+                          if (isCurrent) _buildCurrentBadge(context),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        milestone['title'] ?? 'Milestone',
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        milestone['description'] ?? '',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.7,
+                          ),
+                          height: 1.5,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      if (milestone['action_items'] != null)
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: theme.cardTheme.color,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: isDark
+                                  ? AppColors.darkBorder
+                                  : AppColors.lightBorder,
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children:
+                                (milestone['action_items'] as List<dynamic>)
+                                    .map((action) {
+                                      return _buildActionMiniRow(
+                                        context,
+                                        action,
+                                      );
+                                    })
+                                    .toList(),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-    ).animate().fadeIn(duration: 600.ms, delay: (index * 150).ms).slideX(begin: 0.05);
+        )
+        .animate()
+        .fadeIn(duration: 600.ms, delay: (index * 150).ms)
+        .slideX(begin: 0.05);
   }
 
   Widget _buildCurrentBadge(BuildContext context) {

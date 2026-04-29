@@ -1,14 +1,21 @@
+import 'package:ezucute/core/api/api_service.dart';
+import 'package:ezucute/data/app_data_store.dart';
+import 'package:ezucute/features/onboarding/onboarding_page.dart';
+import 'package:ezucute/routes/app_shell.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:habit_builder/core/theme/app_colors.dart';
-import 'package:habit_builder/core/api/api_service.dart';
-import 'package:habit_builder/data/app_data_store.dart';
-import 'package:habit_builder/features/onboarding/onboarding_page.dart';
-import 'package:habit_builder/routes/app_shell.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class AuthPage extends StatefulWidget {
-  const AuthPage({super.key});
+  final bool initialIsLogin;
+  final bool disableToggle;
+
+  const AuthPage({
+    super.key,
+    this.initialIsLogin = true,
+    this.disableToggle = false,
+  });
 
   @override
   State<AuthPage> createState() => _AuthPageState();
@@ -20,8 +27,14 @@ class _AuthPageState extends State<AuthPage> {
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
 
-  bool _isLogin = true;
+  late bool _isLogin;
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _isLogin = widget.initialIsLogin;
+  }
 
   Future<void> _submit() async {
     final email = _emailController.text.trim();
@@ -38,8 +51,29 @@ class _AuthPageState extends State<AuthPage> {
     try {
       if (_isLogin) {
         await ApiService.login(email, password);
-        await AppDataStore().refreshData();
-        if (mounted) {
+      } else {
+        if (ApiService.isGuest) {
+          await ApiService.upgrade(
+            email,
+            password,
+            firstName: firstName,
+            lastName: lastName,
+          );
+        } else {
+          await ApiService.register(
+            email,
+            password,
+            firstName: firstName,
+            lastName: lastName,
+          );
+        }
+      }
+
+      await AppDataStore().refreshData();
+      if (mounted) {
+        if (Navigator.canPop(context)) {
+          Navigator.of(context).pop(true);
+        } else {
           final store = AppDataStore();
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
@@ -47,19 +81,6 @@ class _AuthPageState extends State<AuthPage> {
                   ? const AppShell()
                   : const OnboardingPage(),
             ),
-          );
-        }
-      } else {
-        await ApiService.register(
-          email,
-          password,
-          firstName: firstName,
-          lastName: lastName,
-        );
-        await AppDataStore().refreshData();
-        if (mounted) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const OnboardingPage()),
           );
         }
       }
@@ -83,11 +104,11 @@ class _AuthPageState extends State<AuthPage> {
         children: [
           // Background decorative elements
           Positioned(
-                top: -100,
-                right: -100,
+                top: -100.h,
+                right: -100.w,
                 child: Container(
-                  width: 300,
-                  height: 300,
+                  width: 300.w,
+                  height: 300.w,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: theme.colorScheme.primary.withValues(alpha: 0.05),
@@ -100,31 +121,33 @@ class _AuthPageState extends State<AuthPage> {
 
           SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 28.0,
-                vertical: 40.0,
+              padding: EdgeInsets.symmetric(
+                horizontal: 28.0.w,
+                vertical: 40.0.h,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 60),
+                  SizedBox(height: 60.h),
                   // Logo / Brand
                   Center(
                         child: Container(
-                          padding: const EdgeInsets.all(20),
+                          padding: EdgeInsets.all(20.r),
                           decoration: BoxDecoration(
                             color: theme.colorScheme.primary.withValues(
                               alpha: 0.1,
                             ),
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                              color: theme.colorScheme.primary.withValues(
+                                alpha: 0.2,
+                              ),
                             ),
                           ),
                           child: Icon(
                             Icons.auto_awesome_rounded,
                             color: theme.colorScheme.primary,
-                            size: 48,
+                            size: 48.sp,
                           ),
                         ),
                       )
@@ -132,12 +155,12 @@ class _AuthPageState extends State<AuthPage> {
                       .fade(duration: 600.ms)
                       .scale(curve: Curves.elasticOut),
 
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24.h),
                   Text(
                     'Habit Architect',
                     textAlign: TextAlign.center,
                     style: theme.textTheme.displayLarge?.copyWith(
-                      fontSize: 32,
+                      fontSize: 32.sp,
                       fontWeight: FontWeight.w900,
                     ),
                   ).animate().fade(delay: 200.ms).slideY(begin: 0.2),
@@ -150,7 +173,7 @@ class _AuthPageState extends State<AuthPage> {
                     style: theme.textTheme.bodyMedium,
                   ).animate().fade(delay: 400.ms).slideY(begin: 0.2),
 
-                  const SizedBox(height: 60),
+                  SizedBox(height: 60.h),
 
                   // Input Fields
                   if (!_isLogin) ...[
@@ -159,13 +182,13 @@ class _AuthPageState extends State<AuthPage> {
                       hint: "First name",
                       icon: Icons.person_outline_rounded,
                     ).animate().fade(delay: 500.ms).slideX(begin: 0.1),
-                    const SizedBox(height: 20),
+                    SizedBox(height: 20.h),
                     _buildInputField(
                       controller: _lastNameController,
                       hint: "Last name",
                       icon: Icons.person_outline_rounded,
                     ).animate().fade(delay: 550.ms).slideX(begin: 0.1),
-                    const SizedBox(height: 20),
+                    SizedBox(height: 20.h),
                   ],
 
                   _buildInputField(
@@ -174,7 +197,7 @@ class _AuthPageState extends State<AuthPage> {
                     icon: Icons.email_outlined,
                   ).animate().fade(delay: 600.ms).slideX(begin: 0.1),
 
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20.h),
 
                   _buildInputField(
                     controller: _passwordController,
@@ -183,19 +206,21 @@ class _AuthPageState extends State<AuthPage> {
                     obscure: true,
                   ).animate().fade(delay: 700.ms).slideX(begin: 0.1),
 
-                  const SizedBox(height: 40),
+                  SizedBox(height: 40.h),
 
                   // Action Button
                   GestureDetector(
                     onTap: _isLoading ? null : _submit,
                     child: Container(
-                      height: 60,
+                      height: 60.h,
                       decoration: BoxDecoration(
                         color: theme.colorScheme.primary,
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(20.r),
                         boxShadow: [
                           BoxShadow(
-                            color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.3,
+                            ),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           ),
@@ -203,19 +228,19 @@ class _AuthPageState extends State<AuthPage> {
                       ),
                       child: Center(
                         child: _isLoading
-                            ? const SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: CircularProgressIndicator(
+                            ? SizedBox(
+                                width: 24.w,
+                                height: 24.w,
+                                child: const CircularProgressIndicator(
                                   color: Colors.white,
                                   strokeWidth: 2,
                                 ),
                               )
                             : Text(
                                 _isLogin ? 'Sign In' : 'Get Started',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 18,
+                                  fontSize: 18.sp,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -223,34 +248,35 @@ class _AuthPageState extends State<AuthPage> {
                     ),
                   ).animate().fade(delay: 900.ms).scaleY(begin: 0.8),
 
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24.h),
 
                   // Toggle Login/Signup
-                  TextButton(
-                    onPressed: () {
-                      HapticFeedback.lightImpact();
-                      setState(() => _isLogin = !_isLogin);
-                    },
-                    child: RichText(
-                      text: TextSpan(
-                        style: theme.textTheme.bodyMedium,
-                        children: [
-                          TextSpan(
-                            text: _isLogin
-                                ? "New here? "
-                                : "Already a member? ",
-                          ),
-                          TextSpan(
-                            text: _isLogin ? "Create account" : "Sign in",
-                            style: TextStyle(
-                              color: theme.colorScheme.primary,
-                              fontWeight: FontWeight.bold,
+                  if (!widget.disableToggle)
+                    TextButton(
+                      onPressed: () {
+                        HapticFeedback.lightImpact();
+                        setState(() => _isLogin = !_isLogin);
+                      },
+                      child: RichText(
+                        text: TextSpan(
+                          style: theme.textTheme.bodyMedium,
+                          children: [
+                            TextSpan(
+                              text: _isLogin
+                                  ? "New here? "
+                                  : "Already a member? ",
                             ),
-                          ),
-                        ],
+                            TextSpan(
+                              text: _isLogin ? "Create account" : "Sign in",
+                              style: TextStyle(
+                                color: theme.colorScheme.primary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ).animate().fade(delay: 1100.ms),
+                    ).animate().fade(delay: 1100.ms),
                 ],
               ),
             ),
@@ -267,37 +293,23 @@ class _AuthPageState extends State<AuthPage> {
     bool obscure = false,
   }) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.cardTheme.color,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+    return TextField(
+      controller: controller,
+      obscureText: obscure,
+      style: theme.textTheme.bodyLarge,
+      decoration: InputDecoration(
+        prefixIcon: Icon(
+          icon,
+          size: 20.sp,
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
         ),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: TextField(
-        controller: controller,
-        obscureText: obscure,
-        style: theme.textTheme.bodyLarge,
-        decoration: InputDecoration(
-          icon: Icon(
-            icon,
-            size: 20,
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-          ),
-          hintText: hint,
-          hintStyle: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-          ),
-          border: InputBorder.none,
-          enabledBorder: InputBorder.none,
-          focusedBorder: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(vertical: 18),
+        hintText: hint,
+        hintStyle: theme.textTheme.bodyMedium?.copyWith(
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
         ),
       ),
     );
   }
 }
+

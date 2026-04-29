@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:habit_builder/core/api/api_service.dart';
-import 'package:habit_builder/data/app_data_store.dart';
+import 'package:ezucute/core/api/api_service.dart';
+import 'package:ezucute/data/app_data_store.dart';
 
 class PrivacyPage extends StatefulWidget {
   const PrivacyPage({super.key});

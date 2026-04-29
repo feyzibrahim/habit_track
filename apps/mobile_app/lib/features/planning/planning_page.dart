@@ -1,10 +1,11 @@
+import 'package:ezucute/core/api/api_service.dart';
+import 'package:ezucute/core/theme/app_colors.dart';
+import 'package:ezucute/data/app_data_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:habit_builder/core/api/api_service.dart';
-import 'package:habit_builder/core/theme/app_colors.dart';
-import 'package:habit_builder/data/app_data_store.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class PlanningPage extends StatefulWidget {
   const PlanningPage({super.key});
@@ -18,13 +19,20 @@ class _PlanningPageState extends State<PlanningPage> {
 
   final _promptController = TextEditingController();
   final _refinementController = TextEditingController();
-  
+
   bool _isEvaluating = false;
   Map<String, dynamic>? _aiResult;
   String? _error;
-  
+
   String _selectedCategory = 'productivity';
-  final List<String> _categories = ['startup', 'health', 'productivity', 'learning', 'other'];
+  final List<String> _categories = [
+    'startup',
+    'health',
+    'productivity',
+    'learning',
+    'other',
+  ];
+  final _customCategoryController = TextEditingController();
 
   int _selectedDuration = 90;
 
@@ -73,7 +81,7 @@ class _PlanningPageState extends State<PlanningPage> {
 
     try {
       final result = await ApiService.evaluateGoal(
-        _promptController.text.trim(), 
+        _promptController.text.trim(),
         durationDays: _selectedDuration,
         answers: answers,
       );
@@ -121,11 +129,15 @@ class _PlanningPageState extends State<PlanningPage> {
 
     setState(() => _isEvaluating = true);
     try {
+      final category = _selectedCategory == 'other' && _customCategoryController.text.trim().isNotEmpty
+          ? _customCategoryController.text.trim()
+          : _selectedCategory;
+
       await ApiService.createGoal(
         _promptController.text.trim(),
         _aiResult!,
         durationDays: _selectedDuration,
-        category: _selectedCategory,
+        category: category,
       );
       await AppDataStore().refreshData();
       if (mounted) {
@@ -142,6 +154,7 @@ class _PlanningPageState extends State<PlanningPage> {
   void dispose() {
     _promptController.dispose();
     _refinementController.dispose();
+    _customCategoryController.dispose();
     for (var c in _answerControllers) {
       c.dispose();
     }
@@ -201,18 +214,22 @@ class _PlanningPageState extends State<PlanningPage> {
             color: theme.colorScheme.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(18),
           ),
-          child: Icon(LucideIcons.rocket, color: theme.colorScheme.primary, size: 28),
+          child: Icon(
+            LucideIcons.rocket,
+            color: theme.colorScheme.primary,
+            size: 28,
+          ),
         ).animate().scale(curve: Curves.elasticOut, duration: 800.ms),
-        
+
         const SizedBox(height: 32),
-        
+
         Text(
           "Define your\nvision.",
-          style: theme.textTheme.displayLarge?.copyWith(fontSize: 40),
+          style: theme.textTheme.displayLarge?.copyWith(fontSize: 40.sp),
         ).animate().fade().slideY(begin: 0.1),
-        
+
         const SizedBox(height: 16),
-        
+
         Text(
           "Describe what you want to achieve, and our Architect AI will construct a tailored roadmap.",
           style: theme.textTheme.bodyMedium,
@@ -220,23 +237,14 @@ class _PlanningPageState extends State<PlanningPage> {
 
         const SizedBox(height: 48),
 
-        Container(
-          decoration: BoxDecoration(
-            color: theme.cardTheme.color,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
-          ),
-          padding: const EdgeInsets.all(20),
-          child: TextField(
-            controller: _promptController,
-            style: theme.textTheme.bodyLarge?.copyWith(height: 1.4),
-            maxLines: 4,
-            decoration: InputDecoration(
-              hintText: "e.g., I want to master high-performance engineering...",
-              hintStyle: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
-              ),
-              border: InputBorder.none,
+        TextField(
+          controller: _promptController,
+          style: theme.textTheme.bodyLarge?.copyWith(height: 1.4),
+          maxLines: 4,
+          decoration: InputDecoration(
+            hintText: "e.g., I want to master high-performance engineering...",
+            hintStyle: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
             ),
           ),
         ).animate().fade(delay: 400.ms).slideX(begin: 0.05),
@@ -259,18 +267,29 @@ class _PlanningPageState extends State<PlanningPage> {
                   },
                   child: AnimatedContainer(
                     duration: 200.ms,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
                     decoration: BoxDecoration(
-                      color: isSelected ? theme.colorScheme.primary : theme.cardTheme.color,
+                      color: isSelected
+                          ? theme.colorScheme.primary
+                          : theme.cardTheme.color,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: isSelected ? theme.colorScheme.primary : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                        color: isSelected
+                            ? theme.colorScheme.primary
+                            : (isDark
+                                  ? AppColors.darkBorder
+                                  : AppColors.lightBorder),
                       ),
                     ),
                     child: Text(
                       cat.toUpperCase(),
                       style: theme.textTheme.labelSmall?.copyWith(
-                        color: isSelected ? Colors.white : theme.colorScheme.onSurface,
+                        color: isSelected
+                            ? Colors.white
+                            : theme.colorScheme.onSurface,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -280,6 +299,20 @@ class _PlanningPageState extends State<PlanningPage> {
             }).toList(),
           ),
         ).animate().fade(delay: 500.ms).slideX(begin: 0.1),
+
+        if (_selectedCategory == 'other') ...[
+          const SizedBox(height: 16),
+          TextField(
+            controller: _customCategoryController,
+            style: theme.textTheme.bodyLarge,
+            decoration: InputDecoration(
+              hintText: "Enter custom category...",
+              hintStyle: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+              ),
+            ),
+          ).animate().fade().slideY(begin: -0.1),
+        ],
 
         const SizedBox(height: 32),
 
@@ -299,18 +332,29 @@ class _PlanningPageState extends State<PlanningPage> {
                   },
                   child: AnimatedContainer(
                     duration: 200.ms,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 14,
+                    ),
                     decoration: BoxDecoration(
-                      color: isSelected ? theme.colorScheme.primary : theme.cardTheme.color,
+                      color: isSelected
+                          ? theme.colorScheme.primary
+                          : theme.cardTheme.color,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: isSelected ? theme.colorScheme.primary : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                        color: isSelected
+                            ? theme.colorScheme.primary
+                            : (isDark
+                                  ? AppColors.darkBorder
+                                  : AppColors.lightBorder),
                       ),
                     ),
                     child: Text(
                       "$days Days",
                       style: theme.textTheme.labelSmall?.copyWith(
-                        color: isSelected ? Colors.white : theme.colorScheme.onSurface,
+                        color: isSelected
+                            ? Colors.white
+                            : theme.colorScheme.onSurface,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -328,22 +372,27 @@ class _PlanningPageState extends State<PlanningPage> {
             padding: const EdgeInsets.only(bottom: 16),
             child: Text(
               _error!,
-              style: const TextStyle(color: Colors.redAccent, fontSize: 14),
+              style: TextStyle(color: Colors.redAccent, fontSize: 14.sp),
               textAlign: TextAlign.center,
             ),
           ),
-        
+
         ElevatedButton(
           onPressed: _isEvaluating ? null : _clarify,
           style: ElevatedButton.styleFrom(
             minimumSize: const Size(double.infinity, 64),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
           ),
           child: _isEvaluating
               ? const SizedBox(
                   width: 24,
                   height: 24,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
                 )
               : Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -354,20 +403,24 @@ class _PlanningPageState extends State<PlanningPage> {
                   ],
                 ),
         ).animate().fade(delay: 800.ms).scaleY(begin: 0.8),
-        
+
         const SizedBox(height: 40),
       ],
     );
   }
 
-  Widget _buildQuestionsView(BuildContext context, ThemeData theme, bool isDark) {
+  Widget _buildQuestionsView(
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 10),
         Text(
           "Let's refine.",
-          style: theme.textTheme.displayLarge?.copyWith(fontSize: 40),
+          style: theme.textTheme.displayLarge?.copyWith(fontSize: 40.sp),
         ).animate().fade().slideY(begin: 0.1),
         const SizedBox(height: 16),
         Text(
@@ -380,35 +433,34 @@ class _PlanningPageState extends State<PlanningPage> {
         ...List.generate(_questions.length, (index) {
           return Padding(
             padding: const EdgeInsets.only(bottom: 24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _questions[index],
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  decoration: BoxDecoration(
-                    color: theme.cardTheme.color,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  child: TextField(
-                    controller: _answerControllers[index],
-                    style: theme.textTheme.bodyLarge,
-                    decoration: InputDecoration(
-                      hintText: "Your answer...",
-                      hintStyle: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
-                      ),
-                      border: InputBorder.none,
-                    ),
-                  ),
-                ),
-              ],
-            ).animate().fade(delay: Duration(milliseconds: 300 + (index * 100))).slideX(begin: 0.05),
+            child:
+                Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _questions[index],
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: _answerControllers[index],
+                          style: theme.textTheme.bodyLarge,
+                          decoration: InputDecoration(
+                            hintText: "Your answer...",
+                            hintStyle: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.3,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+                    .animate()
+                    .fade(delay: Duration(milliseconds: 300 + (index * 100)))
+                    .slideX(begin: 0.05),
           );
         }),
 
@@ -418,7 +470,7 @@ class _PlanningPageState extends State<PlanningPage> {
             padding: const EdgeInsets.only(bottom: 16),
             child: Text(
               _error!,
-              style: const TextStyle(color: Colors.redAccent, fontSize: 14),
+              style: TextStyle(color: Colors.redAccent, fontSize: 14.sp),
               textAlign: TextAlign.center,
             ),
           ),
@@ -427,13 +479,18 @@ class _PlanningPageState extends State<PlanningPage> {
           onPressed: _isEvaluating ? null : _evaluate,
           style: ElevatedButton.styleFrom(
             minimumSize: const Size(double.infinity, 64),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
           ),
           child: _isEvaluating
               ? const SizedBox(
                   width: 24,
                   height: 24,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
                 )
               : Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -449,13 +506,19 @@ class _PlanningPageState extends State<PlanningPage> {
     );
   }
 
-  Widget _buildFeasibilityView(BuildContext context, ThemeData theme, bool isDark) {
+  Widget _buildFeasibilityView(
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+  ) {
     final result = _aiResult!;
     final feasibility = result['feasibility'] ?? 'moderate';
     final reason = result['feasibility_reason'] ?? "";
     final analysis = result['strategic_analysis'] ?? "";
     final challenges = List<String>.from(result['key_challenges'] ?? []);
-    final graphData = List<Map<String, dynamic>>.from(result['graph_data'] ?? []);
+    final graphData = List<Map<String, dynamic>>.from(
+      result['graph_data'] ?? [],
+    );
     final isPossible = feasibility != 'not possible';
 
     return Column(
@@ -464,37 +527,60 @@ class _PlanningPageState extends State<PlanningPage> {
         const SizedBox(height: 20),
         Text(
           "Strategic\nAnalysis",
-          style: theme.textTheme.displayLarge?.copyWith(fontSize: 40),
+          style: theme.textTheme.displayLarge?.copyWith(fontSize: 40.sp),
         ).animate().fade().slideY(begin: 0.1),
         const SizedBox(height: 32),
 
         _buildStatusBadge(context, feasibility).animate().fade(delay: 200.ms),
         const SizedBox(height: 16),
-        Text(reason, style: theme.textTheme.bodyLarge?.copyWith(height: 1.5)).animate().fade(delay: 300.ms),
-        
+        Text(
+          reason,
+          style: theme.textTheme.bodyLarge?.copyWith(height: 1.5),
+        ).animate().fade(delay: 300.ms),
+
         const SizedBox(height: 24),
-        _buildProbabilityChart(context, theme, (result['probability_ratio'] ?? 75).toDouble()).animate().fade(delay: 350.ms),
+        _buildProbabilityChart(
+          context,
+          theme,
+          (result['probability_ratio'] ?? 75).toDouble(),
+        ).animate().fade(delay: 350.ms),
 
         const SizedBox(height: 40),
         if (analysis.isNotEmpty) ...[
-          _buildSectionTitle(context, "Strategic Approach").animate().fade(delay: 400.ms),
+          _buildSectionTitle(
+            context,
+            "Strategic Approach",
+          ).animate().fade(delay: 400.ms),
           const SizedBox(height: 16),
           Text(
             analysis,
-            style: theme.textTheme.bodyMedium?.copyWith(height: 1.6, color: theme.colorScheme.onSurface.withValues(alpha: 0.8)),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              height: 1.6,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+            ),
           ).animate().fade(delay: 500.ms),
           const SizedBox(height: 40),
         ],
 
         if (graphData.isNotEmpty) ...[
-          _buildSectionTitle(context, "Requirements Graph").animate().fade(delay: 550.ms),
+          _buildSectionTitle(
+            context,
+            "Requirements Graph",
+          ).animate().fade(delay: 550.ms),
           const SizedBox(height: 16),
-          _buildBarChart(context, theme, graphData).animate().fade(delay: 600.ms).slideY(begin: 0.1),
+          _buildBarChart(
+            context,
+            theme,
+            graphData,
+          ).animate().fade(delay: 600.ms).slideY(begin: 0.1),
           const SizedBox(height: 40),
         ],
 
         if (challenges.isNotEmpty) ...[
-          _buildSectionTitle(context, "Key Challenges").animate().fade(delay: 600.ms),
+          _buildSectionTitle(
+            context,
+            "Key Challenges",
+          ).animate().fade(delay: 600.ms),
           const SizedBox(height: 16),
           Wrap(
             spacing: 12,
@@ -509,7 +595,7 @@ class _PlanningPageState extends State<PlanningPage> {
             padding: const EdgeInsets.only(bottom: 16),
             child: Text(
               _error!,
-              style: const TextStyle(color: Colors.redAccent, fontSize: 14),
+              style: TextStyle(color: Colors.redAccent, fontSize: 14.sp),
               textAlign: TextAlign.center,
             ),
           ),
@@ -521,7 +607,9 @@ class _PlanningPageState extends State<PlanningPage> {
             },
             style: ElevatedButton.styleFrom(
               minimumSize: const Size(double.infinity, 64),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -537,15 +625,21 @@ class _PlanningPageState extends State<PlanningPage> {
             onPressed: () => setState(() => _step = 0),
             child: const Text("Try another mission prompt"),
           ).animate().fade(delay: 800.ms),
-          
+
         const SizedBox(height: 40),
       ],
     );
   }
 
-  Widget _buildRoadmapPreviewView(BuildContext context, ThemeData theme, bool isDark) {
+  Widget _buildRoadmapPreviewView(
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+  ) {
     final plan = _aiResult!['plan'];
-    final milestones = plan != null ? List<dynamic>.from(plan['milestones'] ?? []) : [];
+    final milestones = plan != null
+        ? List<dynamic>.from(plan['milestones'] ?? [])
+        : [];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -553,57 +647,57 @@ class _PlanningPageState extends State<PlanningPage> {
         const SizedBox(height: 20),
         Text(
           "Roadmap\nPreview",
-          style: theme.textTheme.displayLarge?.copyWith(fontSize: 40),
+          style: theme.textTheme.displayLarge?.copyWith(fontSize: 40.sp),
         ).animate().fade().slideY(begin: 0.1),
         const SizedBox(height: 32),
 
         ...List.generate(milestones.length, (index) {
           final milestone = milestones[index];
-          return _buildTimelineItem(context, milestone, index, index == milestones.length - 1);
+          return _buildTimelineItem(
+            context,
+            milestone,
+            index,
+            index == milestones.length - 1,
+          );
         }),
 
         const SizedBox(height: 32),
-        
-        _buildSectionTitle(context, "Refine Plan").animate().fade(delay: 600.ms),
+
+        _buildSectionTitle(
+          context,
+          "Refine Plan",
+        ).animate().fade(delay: 600.ms),
         const SizedBox(height: 12),
-        Container(
-          decoration: BoxDecoration(
-            color: theme.cardTheme.color,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _refinementController,
-                  decoration: InputDecoration(
-                    hintText: "Change anything? (e.g. Make it harder)",
-                    hintStyle: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+        TextField(
+          controller: _refinementController,
+          decoration: InputDecoration(
+            hintText: "Change anything? (e.g. Make it harder)",
+            hintStyle: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+            ),
+            suffixIcon: _isEvaluating
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : IconButton(
+                    icon: Icon(
+                      LucideIcons.refreshCw,
+                      color: theme.colorScheme.primary,
                     ),
-                    border: InputBorder.none,
+                    onPressed: () async {
+                      final prompt = _refinementController.text.trim();
+                      if (prompt.isEmpty) return;
+                      final newResult = await _refineRoadmap(prompt);
+                      if (newResult != null && mounted) {
+                        setState(() {
+                          _aiResult = newResult;
+                          _refinementController.clear();
+                        });
+                      }
+                    },
                   ),
-                ),
-              ),
-              IconButton(
-                icon: _isEvaluating 
-                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) 
-                  : Icon(LucideIcons.refreshCw, color: theme.colorScheme.primary),
-                onPressed: _isEvaluating ? null : () async {
-                  final prompt = _refinementController.text.trim();
-                  if (prompt.isEmpty) return;
-                  final newResult = await _refineRoadmap(prompt);
-                  if (newResult != null && mounted) {
-                    setState(() {
-                      _aiResult = newResult;
-                      _refinementController.clear();
-                    });
-                  }
-                },
-              )
-            ],
           ),
         ).animate().fade(delay: 650.ms),
         const SizedBox(height: 24),
@@ -612,13 +706,18 @@ class _PlanningPageState extends State<PlanningPage> {
           onPressed: _isEvaluating ? null : _startPlan,
           style: ElevatedButton.styleFrom(
             minimumSize: const Size(double.infinity, 64),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
           ),
           child: _isEvaluating
               ? const SizedBox(
                   width: 24,
                   height: 24,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
                 )
               : Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -634,120 +733,146 @@ class _PlanningPageState extends State<PlanningPage> {
     );
   }
 
-  Widget _buildTimelineItem(BuildContext context, Map<String, dynamic> milestone, int index, bool isLast) {
+  Widget _buildTimelineItem(
+    BuildContext context,
+    Map<String, dynamic> milestone,
+    int index,
+    bool isLast,
+  ) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final order = milestone['weeks_from_start'] ?? (index + 1);
-    final isCurrent = index == 0; 
+    final isCurrent = index == 0;
 
     return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Column(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: isCurrent
-                      ? theme.colorScheme.primary
-                      : Colors.transparent,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: isCurrent
-                        ? theme.colorScheme.primary
-                        : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
-                    width: 2,
-                  ),
-                ),
-                child: Center(
-                  child: Text(
-                    order.toString(),
-                    style: TextStyle(
-                      color: isCurrent
-                          ? Colors.white
-                          : theme.colorScheme.onSurface.withValues(alpha: 0.3),
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-              ),
-              if (!isLast)
-                Expanded(
-                  child: Container(
-                    width: 2,
-                    color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-                    margin: const EdgeInsets.symmetric(vertical: 8),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(width: 20),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 40),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              Column(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "PHASE $order",
-                        style: theme.textTheme.labelSmall?.copyWith(
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: isCurrent
+                          ? theme.colorScheme.primary
+                          : Colors.transparent,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isCurrent
+                            ? theme.colorScheme.primary
+                            : (isDark
+                                  ? AppColors.darkBorder
+                                  : AppColors.lightBorder),
+                        width: 2,
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        order.toString(),
+                        style: TextStyle(
                           color: isCurrent
-                              ? theme.colorScheme.primary
-                              : theme.colorScheme.onSurface.withValues(alpha: 0.3),
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1.0,
+                              ? Colors.white
+                              : theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.3,
+                                ),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12.sp,
                         ),
                       ),
-                      if (isCurrent) _buildCurrentBadge(context),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    milestone['title'] ?? 'Milestone',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    milestone['description'] ?? '',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-                      height: 1.5,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  if (milestone['action_items'] != null)
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: theme.cardTheme.color,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: (milestone['action_items'] as List<dynamic>).map((action) {
-                          return _buildActionMiniRow(context, action);
-                        }).toList(),
+                  if (!isLast)
+                    Expanded(
+                      child: Container(
+                        width: 2,
+                        color: isDark
+                            ? AppColors.darkBorder
+                            : AppColors.lightBorder,
+                        margin: const EdgeInsets.symmetric(vertical: 8),
                       ),
                     ),
                 ],
               ),
-            ),
+              const SizedBox(width: 20),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 40),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "PHASE $order",
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: isCurrent
+                                  ? theme.colorScheme.primary
+                                  : theme.colorScheme.onSurface.withValues(
+                                      alpha: 0.3,
+                                    ),
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1.0,
+                            ),
+                          ),
+                          if (isCurrent) _buildCurrentBadge(context),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        milestone['title'] ?? 'Milestone',
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        milestone['description'] ?? '',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.7,
+                          ),
+                          height: 1.5,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      if (milestone['action_items'] != null)
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: theme.cardTheme.color,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: isDark
+                                  ? AppColors.darkBorder
+                                  : AppColors.lightBorder,
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children:
+                                (milestone['action_items'] as List<dynamic>)
+                                    .map((action) {
+                                      return _buildActionMiniRow(
+                                        context,
+                                        action,
+                                      );
+                                    })
+                                    .toList(),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-    ).animate().fadeIn(duration: 600.ms, delay: (index * 150).ms).slideX(begin: 0.05);
+        )
+        .animate()
+        .fadeIn(duration: 600.ms, delay: (index * 150).ms)
+        .slideX(begin: 0.05);
   }
 
   Widget _buildCurrentBadge(BuildContext context) {
@@ -829,7 +954,11 @@ class _PlanningPageState extends State<PlanningPage> {
     );
   }
 
-  Widget _buildProbabilityChart(BuildContext context, ThemeData theme, double probability) {
+  Widget _buildProbabilityChart(
+    BuildContext context,
+    ThemeData theme,
+    double probability,
+  ) {
     final color = probability >= 75
         ? Colors.greenAccent
         : (probability >= 50 ? Colors.orangeAccent : Colors.redAccent);
@@ -838,16 +967,20 @@ class _PlanningPageState extends State<PlanningPage> {
     String description;
     if (probability >= 80) {
       label = "OPTIMAL";
-      description = "The metrics are excellent. Your consistency and target duration indicate a high success rate.";
+      description =
+          "The metrics are excellent. Your consistency and target duration indicate a high success rate.";
     } else if (probability >= 60) {
       label = "GOOD";
-      description = "A strong roadmap. Success is highly likely with disciplined execution of daily quests.";
+      description =
+          "A strong roadmap. Success is highly likely with disciplined execution of daily quests.";
     } else if (probability >= 40) {
       label = "MODERATE";
-      description = "Feasible, but demands strict alignment. You will need to build heavy friction blockers.";
+      description =
+          "Feasible, but demands strict alignment. You will need to build heavy friction blockers.";
     } else {
       label = "RISKY";
-      description = "High operational hazard. This timeline is extremely tight for the scale of this quest.";
+      description =
+          "High operational hazard. This timeline is extremely tight for the scale of this quest.";
     }
 
     return Container(
@@ -864,8 +997,8 @@ class _PlanningPageState extends State<PlanningPage> {
         ),
         borderRadius: BorderRadius.circular(32),
         border: Border.all(
-          color: theme.brightness == Brightness.dark 
-              ? AppColors.darkBorder.withValues(alpha: 0.5) 
+          color: theme.brightness == Brightness.dark
+              ? AppColors.darkBorder.withValues(alpha: 0.5)
               : AppColors.lightBorder.withValues(alpha: 0.5),
         ),
         boxShadow: [
@@ -912,7 +1045,8 @@ class _PlanningPageState extends State<PlanningPage> {
                   painter: _GradientCircularProgressPainter(
                     probability: probability,
                     baseColor: color,
-                    trackColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
+                    trackColor: theme.colorScheme.surfaceContainerHighest
+                        .withValues(alpha: 0.6),
                   ),
                 ),
                 Column(
@@ -957,7 +1091,11 @@ class _PlanningPageState extends State<PlanningPage> {
     );
   }
 
-  Widget _buildBarChart(BuildContext context, ThemeData theme, List<Map<String, dynamic>> data) {
+  Widget _buildBarChart(
+    BuildContext context,
+    ThemeData theme,
+    List<Map<String, dynamic>> data,
+  ) {
     return Column(
       children: data.map((item) {
         final label = item['label'] ?? '';
@@ -972,8 +1110,18 @@ class _PlanningPageState extends State<PlanningPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(label, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold)),
-                  Text("${value.toInt()}%", style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.primary)),
+                  Text(
+                    label,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    "${value.toInt()}%",
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 6),
@@ -1001,7 +1149,7 @@ class _PlanningPageState extends State<PlanningPage> {
                       ],
                     ),
                   );
-                }
+                },
               ),
             ],
           ),
@@ -1067,10 +1215,10 @@ class _PlanningPageState extends State<PlanningPage> {
         ),
       ),
       child: Text(
-        text, 
+        text,
         style: theme.textTheme.bodyMedium?.copyWith(
           fontWeight: FontWeight.w500,
-        )
+        ),
       ),
     );
   }
@@ -1090,7 +1238,8 @@ class _GradientCircularProgressPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final radius = (size.width < size.height ? size.width / 2 : size.height / 2) - 6;
+    final radius =
+        (size.width < size.height ? size.width / 2 : size.height / 2) - 6;
 
     // Draw background track
     final trackPaint = Paint()

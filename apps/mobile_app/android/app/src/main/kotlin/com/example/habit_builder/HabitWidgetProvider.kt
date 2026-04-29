@@ -1,4 +1,4 @@
-package com.example.habit_builder
+package com.app.ezucute
 
 import android.appwidget.AppWidgetManager
 import android.content.Context

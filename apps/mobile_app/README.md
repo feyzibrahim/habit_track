@@ -1,4 +1,4 @@
-# habit_builder
+# ezucute
 
 A new Flutter project.
 

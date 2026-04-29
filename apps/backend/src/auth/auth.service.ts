@@ -29,10 +29,21 @@ export class AuthService {
   async register(email: string, pass: string, firstName?: string, lastName?: string) {
     const existing = await this.usersService.findByEmail(email);
     if (existing) {
-      throw new BadRequestException('User already exists');
+      throw new BadRequestException('User already exists. Please login.');
     }
     const hash = await bcrypt.hash(pass, 10);
     const user = await this.usersService.create(email, hash, firstName, lastName);
     return this.login(user); // auto-login after register
+  }
+
+  async registerGuest() {
+    const user = await this.usersService.createGuest();
+    return this.login(user);
+  }
+
+  async upgradeGuest(userId: string, email: string, pass: string, firstName?: string, lastName?: string) {
+    const hash = await bcrypt.hash(pass, 10);
+    const user = await this.usersService.upgradeGuest(userId, email, hash, firstName, lastName);
+    return this.login(user);
   }
 }

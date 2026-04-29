@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:habit_builder/core/models/goal_model.dart' as goals;
-import 'package:habit_builder/core/theme/app_colors.dart';
-import 'package:habit_builder/data/app_data_store.dart';
-import 'package:habit_builder/features/planning/planning_page.dart';
-import 'package:habit_builder/features/taskDetails/task_details_page.dart';
-import 'package:habit_builder/features/friends/leaderboard_page.dart';
-import 'package:habit_builder/features/chat/chat_page.dart';
+import 'package:ezucute/core/models/goal_model.dart' as goals;
+import 'package:ezucute/core/theme/app_colors.dart';
+import 'package:ezucute/data/app_data_store.dart';
+import 'package:ezucute/features/planning/planning_page.dart';
+import 'package:ezucute/features/taskDetails/task_details_page.dart';
+import 'package:ezucute/features/friends/leaderboard_page.dart';
+import 'package:ezucute/features/chat/chat_page.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:confetti/confetti.dart';
+import 'package:ezucute/core/api/api_service.dart';
+import 'package:ezucute/features/auth/auth_page.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -57,6 +60,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'home_fab',
         onPressed: () {
           Navigator.push(
             context,
@@ -81,6 +85,7 @@ class _HomePageState extends State<HomePage> {
                   physics: const BouncingScrollPhysics(),
                   slivers: [
                     _buildAppBar(context),
+                    if (ApiService.isGuest) _buildGuestBanner(context),
                     if (store.isLoading && store.todaysDailyTasks.isEmpty)
                       const SliverFillRemaining(
                         child: Center(child: CircularProgressIndicator()),
@@ -204,6 +209,7 @@ class _HomePageState extends State<HomePage> {
     final theme = Theme.of(context);
     return SliverAppBar(
       floating: true,
+      toolbarHeight: 80.h,
       backgroundColor: theme.scaffoldBackgroundColor.withValues(alpha: 0.8),
       surfaceTintColor: Colors.transparent,
       title: Column(
@@ -219,7 +225,7 @@ class _HomePageState extends State<HomePage> {
           Text(
             'Good Morning',
             style: theme.textTheme.titleLarge?.copyWith(
-              fontSize: 24,
+              fontSize: 24.sp,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -419,6 +425,89 @@ class _HomePageState extends State<HomePage> {
       MaterialPageRoute(builder: (_) => const PlanningPage()),
     );
   }
+
+  Widget _buildGuestBanner(BuildContext context) {
+    final theme = Theme.of(context);
+    return SliverToBoxAdapter(
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.errorContainer.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: theme.colorScheme.error.withValues(alpha: 0.5),
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              LucideIcons.alertCircle,
+              color: theme.colorScheme.error,
+              size: 20,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "You haven't registered",
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.error,
+                    ),
+                  ),
+                  Text(
+                    "Register to save your progress",
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () => _showAuthModal(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.colorScheme.error,
+                foregroundColor: theme.colorScheme.onError,
+                visualDensity: VisualDensity.compact,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+              ),
+              child: const Text("Register"),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showAuthModal(BuildContext context) async {
+    final result = await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder:
+          (context) => Container(
+            height: MediaQuery.of(context).size.height * 0.9,
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              color: Theme.of(context).scaffoldBackgroundColor,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(32),
+              ),
+            ),
+            child: const AuthPage(
+              initialIsLogin: false,
+              disableToggle: true,
+            ),
+          ),
+    );
+    if (result == true && mounted) {
+      setState(() {});
+    }
+  }
 }
 
 class _StatItem extends StatelessWidget {
@@ -471,7 +560,7 @@ class _StatItem extends StatelessWidget {
                   value,
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
-                    fontSize: 24,
+                    fontSize: 24.sp,
                   ),
                 ),
                 const SizedBox(width: 4),
@@ -488,7 +577,7 @@ class _StatItem extends StatelessWidget {
               label,
               style: theme.textTheme.labelSmall?.copyWith(
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                fontSize: 10,
+                fontSize: 10.sp,
               ),
             ),
           ],
@@ -632,7 +721,7 @@ class _TaskTileState extends State<_TaskTile> {
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: Colors.amber,
                   fontWeight: FontWeight.bold,
-                  fontSize: 9,
+                  fontSize: 9.sp,
                 ),
               ),
             ),

@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:habit_builder/features/auth/auth_page.dart';
-import 'package:habit_builder/core/api/api_service.dart';
+import 'package:ezucute/features/auth/auth_page.dart';
+import 'package:ezucute/core/api/api_service.dart';
 
-import 'package:habit_builder/features/profile/missions_page.dart';
-import 'package:habit_builder/features/profile/settings_page.dart';
-import 'package:habit_builder/features/profile/privacy_page.dart';
-import 'package:habit_builder/features/profile/notifications_page.dart';
-import 'package:habit_builder/features/friends/friends_page.dart';
-import 'package:habit_builder/features/friends/leaderboard_page.dart';
-import 'package:habit_builder/data/app_data_store.dart';
+import 'package:ezucute/features/profile/missions_page.dart';
+import 'package:ezucute/features/profile/settings_page.dart';
+import 'package:ezucute/features/profile/privacy_page.dart';
+import 'package:ezucute/features/profile/notifications_page.dart';
+import 'package:ezucute/features/friends/friends_page.dart';
+import 'package:ezucute/features/friends/leaderboard_page.dart';
+import 'package:ezucute/data/app_data_store.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 class ProfilePage extends StatelessWidget {
@@ -76,7 +76,10 @@ class ProfilePage extends StatelessWidget {
               height: 100,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [theme.colorScheme.primary, theme.colorScheme.secondary],
+                  colors: [
+                    theme.colorScheme.primary,
+                    theme.colorScheme.secondary,
+                  ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -90,11 +93,7 @@ class ProfilePage extends StatelessWidget {
                 ],
               ),
               child: const Center(
-                child: Icon(
-                  LucideIcons.user,
-                  size: 48,
-                  color: Colors.white,
-                ),
+                child: Icon(LucideIcons.user, size: 48, color: Colors.white),
               ),
             ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
             Container(
@@ -104,14 +103,20 @@ class ProfilePage extends StatelessWidget {
                 shape: BoxShape.circle,
                 border: Border.all(color: theme.colorScheme.primary, width: 2),
               ),
-              child: Icon(LucideIcons.contact, size: 14, color: theme.colorScheme.primary),
+              child: Icon(
+                LucideIcons.contact,
+                size: 14,
+                color: theme.colorScheme.primary,
+              ),
             ),
           ],
         ),
         const SizedBox(height: 24),
         Text(
           fullName,
-          style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+          style: theme.textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
         ),
         Text(
           user?['email'] ?? 'operator@mission.control',
@@ -128,10 +133,13 @@ class ProfilePage extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        _buildStatItem(context, 'MISSIONS', store.currentGoals.length.toString()),
+        _buildStatItem(
+          context,
+          'MISSIONS',
+          store.currentGoals.length.toString(),
+        ),
         Container(width: 1, height: 30, color: theme.dividerColor),
-        _buildStatItem(context, 'ACTIVE', 
-           store.activeGoal != null ? '1' : '0'),
+        _buildStatItem(context, 'ACTIVE', store.activeGoal != null ? '1' : '0'),
         Container(width: 1, height: 30, color: theme.dividerColor),
         _buildStatItem(context, 'LEVEL', '8'),
       ],
@@ -144,7 +152,9 @@ class ProfilePage extends StatelessWidget {
       children: [
         Text(
           value,
-          style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
         ),
         const SizedBox(height: 4),
         Text(
@@ -163,9 +173,9 @@ class ProfilePage extends StatelessWidget {
     return Column(
       children: [
         _buildMenuItem(
-          context, 
-          LucideIcons.rocket, 
-          'My Missions', 
+          context,
+          LucideIcons.rocket,
+          'My Missions',
           subtitle: 'Switch or manage your goals',
           onTap: () => Navigator.push(
             context,
@@ -173,9 +183,9 @@ class ProfilePage extends StatelessWidget {
           ),
         ),
         _buildMenuItem(
-          context, 
-          LucideIcons.settings, 
-          'Settings', 
+          context,
+          LucideIcons.settings,
+          'Settings',
           subtitle: 'App preferences and theme',
           onTap: () => Navigator.push(
             context,
@@ -183,9 +193,9 @@ class ProfilePage extends StatelessWidget {
           ),
         ),
         _buildMenuItem(
-          context, 
-          LucideIcons.users, 
-          'Friends', 
+          context,
+          LucideIcons.users,
+          'Friends',
           subtitle: 'Manage your connections',
           onTap: () => Navigator.push(
             context,
@@ -193,9 +203,9 @@ class ProfilePage extends StatelessWidget {
           ),
         ),
         _buildMenuItem(
-          context, 
-          LucideIcons.trophy, 
-          'Leaderboard', 
+          context,
+          LucideIcons.trophy,
+          'Leaderboard',
           subtitle: 'View friends progress and XP',
           onTap: () => Navigator.push(
             context,
@@ -203,9 +213,9 @@ class ProfilePage extends StatelessWidget {
           ),
         ),
         _buildMenuItem(
-          context, 
-          LucideIcons.shield, 
-          'Privacy', 
+          context,
+          LucideIcons.shield,
+          'Privacy',
           subtitle: 'Data and security settings',
           onTap: () => Navigator.push(
             context,
@@ -213,9 +223,9 @@ class ProfilePage extends StatelessWidget {
           ),
         ),
         _buildMenuItem(
-          context, 
-          LucideIcons.bell, 
-          'Notifications', 
+          context,
+          LucideIcons.bell,
+          'Notifications',
           subtitle: 'Reminder and alert configurations',
           onTap: () => Navigator.push(
             context,
@@ -226,7 +236,13 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuItem(BuildContext context, IconData icon, String title, {String? subtitle, VoidCallback? onTap}) {
+  Widget _buildMenuItem(
+    BuildContext context,
+    IconData icon,
+    String title, {
+    String? subtitle,
+    VoidCallback? onTap,
+  }) {
     final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -242,9 +258,25 @@ class ProfilePage extends StatelessWidget {
           ),
           child: Icon(icon, size: 22, color: theme.colorScheme.primary),
         ),
-        title: Text(title, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
-        subtitle: subtitle != null ? Text(subtitle, style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.5))) : null,
-        trailing: Icon(LucideIcons.chevronRight, size: 18, color: theme.colorScheme.onSurface.withValues(alpha: 0.3)),
+        title: Text(
+          title,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        subtitle: subtitle != null
+            ? Text(
+                subtitle,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                ),
+              )
+            : null,
+        trailing: Icon(
+          LucideIcons.chevronRight,
+          size: 18,
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+        ),
       ),
     );
   }
@@ -273,7 +305,9 @@ class ProfilePage extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 20),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
-              side: BorderSide(color: theme.colorScheme.error.withValues(alpha: 0.2)),
+              side: BorderSide(
+                color: theme.colorScheme.error.withValues(alpha: 0.2),
+              ),
             ),
           ),
         ),

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:confetti/confetti.dart';
-import 'package:habit_builder/data/app_data_store.dart';
-import 'package:habit_builder/core/models/goal_model.dart';
-import 'package:habit_builder/core/theme/app_colors.dart';
+import 'package:ezucute/data/app_data_store.dart';
+import 'package:ezucute/core/models/goal_model.dart';
+import 'package:ezucute/core/theme/app_colors.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 class TaskDetailsPage extends StatefulWidget {
@@ -25,7 +25,9 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
   @override
   void initState() {
     super.initState();
-    _confettiController = ConfettiController(duration: const Duration(seconds: 2));
+    _confettiController = ConfettiController(
+      duration: const Duration(seconds: 2),
+    );
     if (widget.task.steps.isEmpty) {
       _generateSteps();
     }
@@ -61,9 +63,9 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error: $e")),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Error: $e")));
       }
     } finally {
       if (mounted) {
@@ -123,62 +125,98 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
                   confettiController: _confettiController,
                   blastDirectionality: BlastDirectionality.explosive,
                   shouldLoop: false,
-                  colors: const [Colors.green, Colors.blue, Colors.pink, Colors.orange, Colors.purple],
+                  colors: const [
+                    Colors.green,
+                    Colors.blue,
+                    Colors.pink,
+                    Colors.orange,
+                    Colors.purple,
+                  ],
                 ),
               ),
               if (_showXpAnimation)
                 Center(
-                  child: Container(
-                    padding: const EdgeInsets.all(32),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.8),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.amber.withValues(alpha: 0.2),
-                          blurRadius: 50,
-                          spreadRadius: 20,
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(LucideIcons.trophy, size: 72, color: Colors.amber)
-                            .animate()
-                            .scale(begin: const Offset(0.5, 0.5), end: const Offset(1.2, 1.2), duration: 400.ms, curve: Curves.easeOutBack)
-                            .then()
-                            .scale(end: const Offset(1.0, 1.0), duration: 200.ms)
-                            .shake(hz: 2, rotation: 0.1, duration: 400.ms),
-                        const SizedBox(height: 16),
-                        TweenAnimationBuilder<int>(
-                          tween: IntTween(begin: 0, end: _xpGained),
-                          duration: const Duration(milliseconds: 1200),
-                          curve: Curves.easeOutCubic,
-                          builder: (context, value, child) {
-                            return Text(
-                              "+$value XP",
-                              style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                                color: Colors.amber,
-                                fontWeight: FontWeight.w900,
-                                shadows: [
-                                  Shadow(
-                                    color: Colors.amber.withValues(alpha: 0.8),
-                                    blurRadius: 30,
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        )
-                      ],
-                    ),
-                  ).animate()
-                   .fadeIn(duration: 200.ms)
-                   .slideY(begin: 0.2, end: 0, duration: 400.ms, curve: Curves.easeOutBack)
-                   .then(delay: 1.seconds)
-                   .fadeOut(duration: 400.ms)
-                   .slideY(begin: 0, end: -0.2),
+                  child:
+                      Container(
+                            padding: const EdgeInsets.all(32),
+                            decoration: BoxDecoration(
+                              color: Theme.of(
+                                context,
+                              ).scaffoldBackgroundColor.withValues(alpha: 0.8),
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.amber.withValues(alpha: 0.2),
+                                  blurRadius: 50,
+                                  spreadRadius: 20,
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                      LucideIcons.trophy,
+                                      size: 72,
+                                      color: Colors.amber,
+                                    )
+                                    .animate()
+                                    .scale(
+                                      begin: const Offset(0.5, 0.5),
+                                      end: const Offset(1.2, 1.2),
+                                      duration: 400.ms,
+                                      curve: Curves.easeOutBack,
+                                    )
+                                    .then()
+                                    .scale(
+                                      end: const Offset(1.0, 1.0),
+                                      duration: 200.ms,
+                                    )
+                                    .shake(
+                                      hz: 2,
+                                      rotation: 0.1,
+                                      duration: 400.ms,
+                                    ),
+                                const SizedBox(height: 16),
+                                TweenAnimationBuilder<int>(
+                                  tween: IntTween(begin: 0, end: _xpGained),
+                                  duration: const Duration(milliseconds: 1200),
+                                  curve: Curves.easeOutCubic,
+                                  builder: (context, value, child) {
+                                    return Text(
+                                      "+$value XP",
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .displaySmall
+                                          ?.copyWith(
+                                            color: Colors.amber,
+                                            fontWeight: FontWeight.w900,
+                                            shadows: [
+                                              Shadow(
+                                                color: Colors.amber.withValues(
+                                                  alpha: 0.8,
+                                                ),
+                                                blurRadius: 30,
+                                              ),
+                                            ],
+                                          ),
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          )
+                          .animate()
+                          .fadeIn(duration: 200.ms)
+                          .slideY(
+                            begin: 0.2,
+                            end: 0,
+                            duration: 400.ms,
+                            curve: Curves.easeOutBack,
+                          )
+                          .then(delay: 1.seconds)
+                          .fadeOut(duration: 400.ms)
+                          .slideY(begin: 0, end: -0.2),
                 ),
             ],
           ),
@@ -490,10 +528,12 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
                   ? Colors.green.withValues(alpha: 0.1)
                   : theme.colorScheme.primary,
               foregroundColor: isMainDone ? Colors.green : Colors.white,
-              disabledBackgroundColor:
-                  theme.colorScheme.onSurface.withValues(alpha: 0.1),
-              disabledForegroundColor:
-                  theme.colorScheme.onSurface.withValues(alpha: 0.3),
+              disabledBackgroundColor: theme.colorScheme.onSurface.withValues(
+                alpha: 0.1,
+              ),
+              disabledForegroundColor: theme.colorScheme.onSurface.withValues(
+                alpha: 0.3,
+              ),
               minimumSize: const Size(double.infinity, 64),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),

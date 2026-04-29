@@ -1,11 +1,11 @@
+import 'package:ezucute/core/api/api_service.dart';
+import 'package:ezucute/core/theme/app_theme.dart';
+import 'package:ezucute/data/app_data_store.dart';
+import 'package:ezucute/features/onboarding/onboarding_page.dart';
+import 'package:ezucute/routes/app_shell.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:habit_builder/core/api/api_service.dart';
-import 'package:habit_builder/core/theme/app_theme.dart';
-import 'package:habit_builder/data/app_data_store.dart';
-import 'package:habit_builder/features/auth/auth_page.dart';
-import 'package:habit_builder/features/onboarding/onboarding_page.dart';
-import 'package:habit_builder/routes/app_shell.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,6 +15,12 @@ void main() async {
 
   if (ApiService.isAuthenticated) {
     await AppDataStore().refreshData();
+  } else {
+    try {
+      await ApiService.loginGuest();
+    } catch (e) {
+      debugPrint("Failed to initialize guest mode: $e");
+    }
   }
 
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
@@ -34,25 +40,33 @@ class HabitBuilderApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget initialScreen;
-    if (ApiService.isAuthenticated) {
-      final store = AppDataStore();
-      if (store.activeGoal != null) {
-        initialScreen = const AppShell();
-      } else {
-        initialScreen = const OnboardingPage();
-      }
-    } else {
-      initialScreen = const AuthPage();
-    }
+    return ScreenUtilInit(
+      designSize: const Size(390, 844),
+      minTextAdapt: true,
+      splitScreenMode: true,
+      builder: (context, child) {
+        Widget initialScreen;
+        if (ApiService.isAuthenticated) {
+          final store = AppDataStore();
+          if (store.activeGoal != null) {
+            initialScreen = const AppShell();
+          } else {
+            initialScreen = const OnboardingPage();
+          }
+        } else {
+          initialScreen = const OnboardingPage();
+        }
 
-    return MaterialApp(
-      title: 'Mission Control',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
-      home: initialScreen,
+        return MaterialApp(
+          title: 'Mission Control',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: ThemeMode.system,
+          home: initialScreen,
+        );
+      },
     );
   }
 }
+

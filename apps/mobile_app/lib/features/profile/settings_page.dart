@@ -1,6 +1,6 @@
+import 'package:ezucute/core/api/api_service.dart';
+import 'package:ezucute/data/app_data_store.dart';
 import 'package:flutter/material.dart';
-import 'package:habit_builder/core/api/api_service.dart';
-import 'package:habit_builder/data/app_data_store.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -14,7 +14,6 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final userData = AppDataStore().userData;
     final settings = userData?['settings'] ?? {};
 
@@ -67,10 +66,7 @@ class _SettingsPageState extends State<SettingsPage> {
   ) {
     return TextFormField(
       initialValue: initialValue,
-      decoration: InputDecoration(
-        labelText: label,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-      ),
+      decoration: InputDecoration(labelText: label),
       onFieldSubmitted: (val) {
         final field = label.toLowerCase().replaceAll(" ", "");
         _updateProfile({field: val});

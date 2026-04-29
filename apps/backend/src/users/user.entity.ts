@@ -25,8 +25,11 @@ export class User {
   @Column({ type: 'jsonb', default: { notifications: true, privacyMode: false, theme: 'dark' } })
   settings: any;
 
-  @Column()
+  @Column({ nullable: true })
   passwordHash: string;
+
+  @Column({ default: false })
+  isGuest: boolean;
 
   @OneToMany(() => Goal, (goal) => goal.user)
   goals: Goal[];

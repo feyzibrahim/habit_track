@@ -2,23 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:habit_builder/core/theme/app_colors.dart';
-import 'package:habit_builder/features/friends/leaderboard_page.dart';
-import 'package:habit_builder/features/home/home_page.dart';
-import 'package:habit_builder/features/profile/profile_page.dart';
-import 'package:habit_builder/features/planning/timeline_page.dart';
-import 'package:habit_builder/features/planning/planning_page.dart';
+import 'package:ezucute/core/theme/app_colors.dart';
+import 'package:ezucute/features/friends/leaderboard_page.dart';
+import 'package:ezucute/features/home/home_page.dart';
+import 'package:ezucute/features/profile/profile_page.dart';
+import 'package:ezucute/features/planning/timeline_page.dart';
+import 'package:ezucute/features/planning/planning_page.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class NavItem {
   final IconData icon;
   final String label;
   final Widget page;
 
-  const NavItem({
-    required this.icon,
-    required this.label,
-    required this.page,
-  });
+  const NavItem({required this.icon, required this.label, required this.page});
 }
 
 class MainNavBar extends StatelessWidget {
@@ -51,7 +48,7 @@ class MainNavBar extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 6.h),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: List.generate(items.length, (i) {
@@ -85,11 +82,11 @@ class _PlanButton extends StatelessWidget {
         onTap();
       },
       child: Container(
-        width: 44,
-        height: 44,
+        width: 44.w,
+        height: 44.w,
         decoration: BoxDecoration(
           color: theme.colorScheme.primary,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(12.r),
           boxShadow: [
             BoxShadow(
               color: theme.colorScheme.primary.withValues(alpha: 0.2),
@@ -98,7 +95,7 @@ class _PlanButton extends StatelessWidget {
             ),
           ],
         ),
-        child: const Icon(LucideIcons.plus, color: Colors.white, size: 24),
+        child: Icon(LucideIcons.plus, color: Colors.white, size: 24.sp),
       ),
     );
   }
@@ -119,38 +116,42 @@ class _NavBarItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    
+
     final activeColor = theme.colorScheme.primary;
-    final inactiveColor = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final inactiveColor = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
 
     return InkWell(
       onTap: () {
         HapticFeedback.lightImpact();
         onTap();
       },
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(12.r),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              item.icon,
-              size: 22,
-              color: isSelected ? activeColor : inactiveColor,
-            ).animate(target: isSelected ? 1 : 0).scale(
-              begin: const Offset(1, 1), 
-              end: const Offset(1.1, 1.1),
-              duration: 200.ms,
-              curve: Curves.easeOutBack,
-            ),
-            const SizedBox(height: 4),
+                  item.icon,
+                  size: 22.sp,
+                  color: isSelected ? activeColor : inactiveColor,
+                )
+                .animate(target: isSelected ? 1 : 0)
+                .scale(
+                  begin: const Offset(1, 1),
+                  end: const Offset(1.1, 1.1),
+                  duration: 200.ms,
+                  curve: Curves.easeOutBack,
+                ),
+            SizedBox(height: 4.h),
             Text(
               item.label,
               style: theme.textTheme.labelSmall?.copyWith(
                 color: isSelected ? activeColor : inactiveColor,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                fontSize: 10,
+                fontSize: 10.sp,
               ),
             ),
           ],
@@ -194,21 +195,13 @@ class _AppShellState extends State<AppShell> {
         label: 'Timeline',
         page: TimelinePage(),
       ),
-      NavItem(
-        icon: LucideIcons.plus,
-        label: 'Plan',
-        page: PlanningPage(),
-      ),
+      NavItem(icon: LucideIcons.plus, label: 'Plan', page: PlanningPage()),
       NavItem(
         icon: LucideIcons.trophy,
         label: 'Leaderboard',
         page: const LeaderboardPage(),
       ),
-      NavItem(
-        icon: LucideIcons.user,
-        label: 'Profile',
-        page: ProfilePage(),
-      ),
+      NavItem(icon: LucideIcons.user, label: 'Profile', page: ProfilePage()),
     ];
   }
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:habit_builder/core/theme/app_colors.dart';
-import 'package:habit_builder/core/api/api_service.dart';
+import 'package:ezucute/core/theme/app_colors.dart';
+import 'package:ezucute/core/api/api_service.dart';
 
 enum MessageSender { ai, user }
 

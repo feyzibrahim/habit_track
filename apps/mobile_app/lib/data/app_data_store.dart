@@ -1,7 +1,9 @@
+import 'package:ezucute/core/api/api_service.dart';
+import 'package:ezucute/core/models/goal_model.dart' as goals;
+import 'package:ezucute/features/home/mission_widget_view.dart';
 import 'package:flutter/material.dart';
-import 'package:habit_builder/core/api/api_service.dart';
-import 'package:habit_builder/core/models/goal_model.dart' as goals;
-import 'package:habit_builder/features/home/mission_widget_view.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:io' show Platform;
 import 'package:home_widget/home_widget.dart';
 
 /// AppDataStore is the central reactive state manager for the application.
@@ -29,7 +31,7 @@ class AppDataStore extends ChangeNotifier {
     _activeGoalId = goalId;
     isLoading = true;
     notifyListeners();
-    
+
     try {
       final details = await ApiService.getGoalDetails(goalId);
       final index = currentGoals.indexWhere((g) => g.id == goalId);
@@ -242,35 +244,34 @@ class AppDataStore extends ChangeNotifier {
   }
 
   void _updateNativeWidget() async {
+    if (kIsWeb) return;
+    if (!Platform.isAndroid && !Platform.isIOS) return;
+
     final active = activeGoal;
     if (active == null) return;
 
     final double progress = goalProgress;
-    final int percent = (progress * 100).toInt();
     final tasks = todaysDailyTasks;
     final nextTask = tasks.where((t) => !t.isCompleted).firstOrNull;
 
-    // 1. Save data for native widgets (Minimal)
-    HomeWidget.saveWidgetData<int>('progressPercent', percent);
-    HomeWidget.saveWidgetData<String>('nextTask', nextTask?.title ?? "Mission complete!");
-
-    // 2. Render complex widget to image (Large)
+    // 1. Render widgets to images
     try {
       await HomeWidget.renderFlutterWidget(
-        MissionWidgetView(
-          goal: active,
-          nextTask: nextTask,
-          progress: progress,
-        ),
+        MissionWidgetView(goal: active, nextTask: nextTask, progress: progress),
         key: 'widgetImage',
         logicalSize: const Size(320, 160),
+      );
+      await HomeWidget.renderFlutterWidget(
+        MinimalMissionWidgetView(score: userScore),
+        key: 'minimalWidgetImage',
+        logicalSize: const Size(160, 160),
       );
     } catch (e) {
       debugPrint("Failed to render widget: $e");
     }
 
     // 3. Trigger OS update
-     HomeWidget.updateWidget(
+    HomeWidget.updateWidget(
       iOSName: 'HabitWidget',
       androidName: 'HabitWidgetProvider',
     );

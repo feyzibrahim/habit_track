@@ -19,22 +19,30 @@ class ApiService {
   }
 
   static String? _token;
+  static bool _isGuest = false;
+
+  static bool get isGuest => _isGuest;
 
   static Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
     _token = prefs.getString('auth_token');
+    _isGuest = prefs.getBool('is_guest') ?? false;
   }
 
-  static void setToken(String token) async {
+  static void setToken(String token, {bool isGuest = false}) async {
     _token = token;
+    _isGuest = isGuest;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('auth_token', token);
+    await prefs.setBool('is_guest', isGuest);
   }
 
   static Future<void> logout() async {
     _token = null;
+    _isGuest = false;
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('auth_token');
+    await prefs.remove('is_guest');
   }
 
   static bool get isAuthenticated => _token != null;
@@ -55,8 +63,18 @@ class ApiService {
     );
     if (res.statusCode == 200) {
       final data = jsonDecode(res.body);
-      setToken(data['access_token']);
+      setToken(data['access_token'], isGuest: false);
       return data;
+    }
+    try {
+      final data = jsonDecode(res.body);
+      if (data is Map && data['message'] != null) {
+        final msg = data['message'];
+        throw msg is List ? msg.join(', ') : msg.toString();
+      }
+    } catch (e) {
+      if (e is String) rethrow;
+      if (e is! FormatException) rethrow;
     }
     throw Exception('Login failed');
   }
@@ -79,10 +97,67 @@ class ApiService {
     );
     if (res.statusCode == 201) {
       final data = jsonDecode(res.body);
-      setToken(data['access_token']);
+      setToken(data['access_token'], isGuest: false);
       return data;
     }
+    try {
+      final data = jsonDecode(res.body);
+      if (data is Map && data['message'] != null) {
+        final msg = data['message'];
+        throw msg is List ? msg.join(', ') : msg.toString();
+      }
+    } catch (e) {
+      if (e is String) rethrow;
+      if (e is! FormatException) rethrow;
+    }
     throw Exception('Register failed');
+  }
+
+  static Future<void> loginGuest() async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/auth/guest'),
+      headers: {'Content-Type': 'application/json'},
+    );
+    if (res.statusCode == 201 || res.statusCode == 200) {
+      final data = jsonDecode(res.body);
+      setToken(data['access_token'], isGuest: true);
+      return;
+    }
+    throw Exception('Failed to login as guest');
+  }
+
+  static Future<Map<String, dynamic>> upgrade(
+    String email,
+    String password, {
+    String? firstName,
+    String? lastName,
+  }) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/auth/upgrade'),
+      headers: _headers,
+      body: jsonEncode({
+        'email': email,
+        'password': password,
+        'firstName': firstName,
+        'lastName': lastName,
+      }),
+    );
+    if (res.statusCode == 201 || res.statusCode == 200) {
+      final data = jsonDecode(res.body);
+      setToken(data['access_token'], isGuest: false);
+      return data;
+    }
+    try {
+      final data = jsonDecode(res.body);
+      if (data is Map && data['message'] != null) {
+        final msg = data['message'];
+        throw msg is List ? msg.join(', ') : msg.toString();
+      }
+    } catch (e) {
+      if (e is String) rethrow;
+      if (e is! FormatException) rethrow;
+    }
+    throw Exception('Failed to upgrade guest account');
   }
 
   static Future<List<dynamic>> getHabits() async {
