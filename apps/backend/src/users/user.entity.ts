@@ -7,6 +7,7 @@ import {
 } from 'typeorm';
 import { Goal } from '../goals/goal.entity';
 import { Friend } from '../friends/friend.entity';
+import { XpEvent } from '../xp/xp-event.entity';
 
 @Entity()
 export class User {
@@ -39,6 +40,9 @@ export class User {
 
   @OneToMany(() => Friend, (friend) => friend.recipient)
   receivedFriendRequests: Friend[];
+
+  @OneToMany(() => XpEvent, (xpEvent) => xpEvent.user)
+  xpHistory: XpEvent[];
 
   @CreateDateColumn()
   createdAt: Date;

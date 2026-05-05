@@ -1,11 +1,10 @@
+import 'package:ezecute/core/models/goal_model.dart';
+import 'package:ezecute/core/theme/app_colors.dart';
+import 'package:ezecute/data/app_data_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:ezucute/data/app_data_store.dart';
-import 'package:ezucute/core/models/goal_model.dart';
-import 'package:ezucute/core/theme/app_colors.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:ezucute/features/chat/chat_page.dart';
 
 class TimelinePage extends StatelessWidget {
   const TimelinePage({super.key});
@@ -16,19 +15,6 @@ class TimelinePage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Roadmap'), centerTitle: true),
-      floatingActionButton: FloatingActionButton.extended(
-        heroTag: 'timeline_fab',
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const AiCoachPage()),
-          );
-        },
-        icon: const Icon(LucideIcons.sparkles),
-        label: const Text('AI Coach'),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Colors.white,
-      ),
       body: ListenableBuilder(
         listenable: AppDataStore(),
         builder: (context, child) {
@@ -257,30 +243,82 @@ class TimelinePage extends StatelessWidget {
                   const SizedBox(height: 24),
 
                   // Phase Action Items Card
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: theme.cardTheme.color,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: isDark
-                            ? AppColors.darkBorder
-                            : AppColors.lightBorder,
+                  if (milestone.actionItems.isNotEmpty)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: theme.cardTheme.color,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: isDark
+                              ? AppColors.darkBorder
+                              : AppColors.lightBorder,
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: () {
+                          final sortedItems =
+                              List<ActionItem>.from(milestone.actionItems)
+                                ..sort((a, b) {
+                                  if (a.targetDate == null &&
+                                      b.targetDate == null)
+                                    return 0;
+                                  if (a.targetDate == null) return 1;
+                                  if (b.targetDate == null) return -1;
+                                  return a.targetDate!.compareTo(b.targetDate!);
+                                });
+                          return sortedItems
+                              .map(
+                                (action) => _ActionMiniRow(
+                                  action: action,
+                                  key: ValueKey(action.id),
+                                ),
+                              )
+                              .toList();
+                        }(),
+                      ),
+                    )
+                  else
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color:
+                            (theme.cardTheme.color ?? theme.colorScheme.surface)
+                                .withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: isDark
+                              ? AppColors.darkBorder.withValues(alpha: 0.5)
+                              : AppColors.lightBorder.withValues(alpha: 0.5),
+                          style: BorderStyle.solid,
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(
+                            LucideIcons.calendarClock,
+                            size: 24,
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.3,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            "Tasks haven't been generated yet.",
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.5,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          _GenerateTasksButton(milestoneId: milestone.id),
+                        ],
                       ),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: milestone.actionItems
-                          .map(
-                            (action) => _ActionMiniRow(
-                              action: action,
-                              key: ValueKey(action.id),
-                            ),
-                          )
-                          .toList(),
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -416,17 +454,70 @@ class _ActionMiniRowState extends State<_ActionMiniRow> {
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: Text(
-                widget.action.title,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: widget.action.isCompleted
-                      ? theme.colorScheme.onSurface.withValues(alpha: 0.4)
-                      : null,
-                  decoration: widget.action.isCompleted
-                      ? TextDecoration.lineThrough
-                      : null,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.action.title,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: widget.action.isCompleted
+                          ? theme.colorScheme.onSurface.withValues(alpha: 0.4)
+                          : null,
+                      decoration: widget.action.isCompleted
+                          ? TextDecoration.lineThrough
+                          : null,
+                    ),
+                  ),
+                  if (widget.action.targetDate != null ||
+                      widget.action.isOptional)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4.0),
+                      child: Row(
+                        children: [
+                          if (widget.action.targetDate != null)
+                            Text(
+                              DateFormat(
+                                'MMM dd',
+                              ).format(widget.action.targetDate!),
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: theme.colorScheme.primary.withValues(
+                                  alpha: 0.8,
+                                ),
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          if (widget.action.targetDate != null &&
+                              widget.action.isOptional)
+                            const SizedBox(width: 8),
+                          if (widget.action.isOptional)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                                vertical: 1,
+                              ),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.1,
+                                ),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                "OPTIONAL",
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.6,
+                                  ),
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                ],
               ),
             ),
             if (widget.action.type == 'habit')
@@ -529,6 +620,58 @@ class _ActionMiniRowState extends State<_ActionMiniRow> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _GenerateTasksButton extends StatefulWidget {
+  final String milestoneId;
+
+  const _GenerateTasksButton({required this.milestoneId});
+
+  @override
+  State<_GenerateTasksButton> createState() => _GenerateTasksButtonState();
+}
+
+class _GenerateTasksButtonState extends State<_GenerateTasksButton> {
+  bool _isLoading = false;
+
+  Future<void> _handleGenerate() async {
+    setState(() => _isLoading = true);
+    try {
+      await AppDataStore().generateTasksForMilestone(widget.milestoneId);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Failed to generate tasks. Please try again."),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: _isLoading ? null : _handleGenerate,
+      style: ElevatedButton.styleFrom(
+        minimumSize: const Size(double.infinity, 48),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      child: _isLoading
+          ? const SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
+              ),
+            )
+          : const Text("Generate Tasks"),
     );
   }
 }

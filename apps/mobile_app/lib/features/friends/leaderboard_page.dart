@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:ezucute/core/api/api_service.dart';
-import 'package:ezucute/core/theme/app_colors.dart';
+import 'package:ezecute/core/api/api_service.dart';
+import 'package:ezecute/core/theme/app_colors.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:ezucute/features/auth/auth_page.dart';
+import 'package:ezecute/features/auth/auth_page.dart';
 
 class LeaderboardPage extends StatefulWidget {
   const LeaderboardPage({super.key});
@@ -29,7 +29,9 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
       final data = await ApiService.getLeaderboard();
       if (mounted) {
         setState(() {
-          _leaderboard = data.where((u) => u['isGuest'] != true && u['email'] != null).toList();
+          _leaderboard = data
+              .where((u) => u['isGuest'] != true && u['email'] != null)
+              .toList();
           _isLoading = false;
         });
       }
@@ -349,7 +351,10 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
                 }
               },
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),

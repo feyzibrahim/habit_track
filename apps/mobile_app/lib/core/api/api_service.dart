@@ -242,8 +242,7 @@ class ApiService {
     String prompt, {
     int? durationDays,
     Map<String, String>? answers,
-    Map<String, dynamic>? previousPlan,
-    String? refinementPrompt,
+    String? startDate,
   }) async {
     final res = await http.post(
       Uri.parse('$baseUrl/goals/evaluate'),
@@ -252,8 +251,7 @@ class ApiService {
         'prompt': prompt,
         if (durationDays != null) 'durationDays': durationDays,
         if (answers != null) 'answers': answers,
-        if (previousPlan != null) 'previousPlan': previousPlan,
-        if (refinementPrompt != null) 'refinementPrompt': refinementPrompt,
+        if (startDate != null) 'startDate': startDate,
       }),
     );
     if (res.statusCode == 201 || res.statusCode == 200) {
@@ -262,11 +260,39 @@ class ApiService {
     throw Exception('Failed to evaluate goal');
   }
 
+  static Future<Map<String, dynamic>> generateRoadmap(
+    String prompt, {
+    int? durationDays,
+    Map<String, String>? answers,
+    Map<String, dynamic>? previousPlan,
+    String? refinementPrompt,
+    String? startDate,
+  }) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/goals/roadmap'),
+      headers: _headers,
+      body: jsonEncode({
+        'prompt': prompt,
+        if (durationDays != null) 'durationDays': durationDays,
+        if (answers != null) 'answers': answers,
+        if (previousPlan != null) 'previousPlan': previousPlan,
+        if (refinementPrompt != null) 'refinementPrompt': refinementPrompt,
+        if (startDate != null) 'startDate': startDate,
+      }),
+    );
+    if (res.statusCode == 201 || res.statusCode == 200) {
+      return jsonDecode(res.body);
+    }
+    throw Exception('Failed to generate roadmap');
+  }
+
   static Future<Map<String, dynamic>> createGoal(
     String prompt,
     Map<String, dynamic> aiPlan, {
     int? durationDays,
     String? category,
+    String? feasibility,
+    String? startDate,
   }) async {
     final res = await http.post(
       Uri.parse('$baseUrl/goals'),
@@ -276,6 +302,8 @@ class ApiService {
         'aiPlan': aiPlan,
         'durationDays': (durationDays != null) ? durationDays : null,
         'category': (category != null) ? category : null,
+        'feasibility': (feasibility != null) ? feasibility : null,
+        if (startDate != null) 'startDate': startDate,
       }),
     );
     if (res.statusCode == 201 || res.statusCode == 200) {
@@ -321,6 +349,17 @@ class ApiService {
       return jsonDecode(res.body);
     }
     throw Exception('Failed to generate steps');
+  }
+
+  static Future<Map<String, dynamic>> generateTasksForMilestone(String id) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/goals/milestones/$id/generate-tasks'),
+      headers: _headers,
+    );
+    if (res.statusCode == 201 || res.statusCode == 200) {
+      return jsonDecode(res.body);
+    }
+    throw Exception('Failed to generate tasks for milestone');
   }
 
   static Future<Map<String, dynamic>> toggleTaskStep(
@@ -415,5 +454,15 @@ class ApiService {
     );
     if (res.statusCode == 200) return jsonDecode(res.body);
     throw Exception('Failed to load leaderboard');
+  }
+
+  // XP API
+  static Future<List<dynamic>> getXpHistory() async {
+    final res = await http.get(
+      Uri.parse('$baseUrl/xp/history'),
+      headers: _headers,
+    );
+    if (res.statusCode == 200) return jsonDecode(res.body);
+    throw Exception('Failed to load XP history');
   }
 }

@@ -1,7 +1,7 @@
-import 'package:ezucute/core/api/api_service.dart';
+import 'package:ezecute/core/api/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:ezucute/features/auth/auth_page.dart';
+import 'package:ezecute/features/auth/auth_page.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 class FriendsPage extends StatefulWidget {
@@ -163,7 +163,10 @@ class _FriendsPageState extends State<FriendsPage> {
                 }
               },
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),

@@ -28,6 +28,12 @@ export class ActionItem {
   @Column({ default: 1 })
   totalTarget: number;
 
+  @Column({ type: 'timestamp', nullable: true })
+  targetDate: Date;
+
+  @Column({ default: false })
+  isOptional: boolean;
+
   @OneToMany(() => TaskStep, (step) => step.actionItem)
   steps: TaskStep[];
 

@@ -12,6 +12,7 @@ import { ActionItem } from './action-item.entity';
 import { Goal } from './goal.entity';
 import { Milestone } from './milestone.entity';
 import { TaskStep } from './task-step.entity';
+import { XpService } from '../xp/xp.service';
 
 @Injectable()
 export class GoalsService {
@@ -26,6 +27,7 @@ export class GoalsService {
     @InjectRepository(TaskStep)
     private taskStepRepository: Repository<TaskStep>,
     private aiService: AiService,
+    private xpService: XpService,
   ) {}
 
   async getClarifyingQuestions(prompt: string) {
@@ -38,13 +40,12 @@ export class GoalsService {
     prompt: string,
     durationDays: number = 90,
     answers?: Record<string, string>,
-    previousPlan?: any,
-    refinementPrompt?: string,
+    startDate?: string,
   ) {
     this.logger.log(
-      `Evaluating goal for user ${userId} (${durationDays} days): ${prompt.substring(0, 50)}...`,
+      `Evaluating feasibility for user ${userId} (${durationDays} days): ${prompt.substring(0, 50)}...`,
     );
-    const aiResponse = await this.aiService.planGoal(prompt, durationDays, answers, previousPlan, refinementPrompt);
+    const aiResponse = await this.aiService.evaluateFeasibility(prompt, durationDays, answers);
 
     if (aiResponse.feasibility === 'not possible') {
       return {
@@ -58,12 +59,29 @@ export class GoalsService {
     return aiResponse;
   }
 
+  async generateRoadmap(
+    userId: string,
+    prompt: string,
+    durationDays: number = 90,
+    answers?: Record<string, string>,
+    previousPlan?: any,
+    refinementPrompt?: string,
+    startDate?: string,
+  ) {
+    this.logger.log(
+      `Generating roadmap for user ${userId} (${durationDays} days): ${prompt.substring(0, 50)}...`,
+    );
+    return this.aiService.planRoadmap(prompt, durationDays, answers, previousPlan, refinementPrompt, startDate);
+  }
+
   async createGoal(
     user: User,
     prompt: string,
     aiPlan: any,
     durationDays: number = 90,
     category: string = 'other',
+    feasibility: string = 'moderate',
+    startDate?: string,
   ) {
     if (!aiPlan || !aiPlan.plan) {
       this.logger.error(
@@ -77,16 +95,23 @@ export class GoalsService {
     this.logger.log(
       `Creating goal for user ${user.id}: ${aiPlan.plan.title} (${durationDays} days)`,
     );
+    const actualStartDate = startDate ? new Date(startDate) : new Date();
+
     const goal = this.goalRepository.create({
       user,
       title: aiPlan.plan.title,
       description: aiPlan.plan.description,
       prompt,
       category,
-      feasibility: aiPlan.feasibility || 'moderate',
+      feasibility: feasibility,
+      feasibilityReason: aiPlan.feasibility_reason || null,
+      strategicAnalysis: aiPlan.strategic_analysis || null,
+      probabilityRatio: aiPlan.probability_ratio || 0,
+      keyChallenges: aiPlan.key_challenges || [],
+      graphData: aiPlan.graph_data || [],
       durationDays: durationDays,
-      startDate: new Date(),
-      targetDate: new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000),
+      startDate: actualStartDate,
+      targetDate: new Date(actualStartDate.getTime() + durationDays * 24 * 60 * 60 * 1000),
       status: 'active',
     });
 
@@ -95,15 +120,17 @@ export class GoalsService {
       `Goal saved (ID: ${savedGoal.id}). Architecting ${aiPlan.plan.milestones.length} milestones...`,
     );
 
+    let milestoneOrder = 1;
+
     for (const m of aiPlan.plan.milestones) {
+      const milestoneTargetDate = m.target_date ? new Date(m.target_date) : new Date(actualStartDate.getTime() + (m.days_from_start || 7) * 24 * 60 * 60 * 1000);
+
       const milestone = this.milestoneRepository.create({
         goal: savedGoal,
         title: m.title,
         description: m.description,
-        order: m.weeks_from_start,
-        targetDate: new Date(
-          Date.now() + m.weeks_from_start * 7 * 24 * 60 * 60 * 1000,
-        ),
+        order: milestoneOrder++,
+        targetDate: milestoneTargetDate,
       });
 
       const savedMilestone = await this.milestoneRepository.save(milestone);
@@ -111,16 +138,23 @@ export class GoalsService {
         `Milestone Phase ${savedMilestone.order} created. Syncing action items...`,
       );
 
-      for (const a of m.action_items) {
-        const actionItem = this.actionItemRepository.create({
-          milestone: savedMilestone,
-          title: a.title,
-          description: a.description,
-          type: a.type,
-          frequency: a.frequency,
-          totalTarget: a.total_target,
-        });
-        await this.actionItemRepository.save(actionItem);
+      if (m.action_items && Array.isArray(m.action_items)) {
+        for (const a of m.action_items) {
+          const actionTargetDate = a.target_date ? new Date(a.target_date) : milestoneTargetDate;
+          actionTargetDate.setHours(23, 59, 59, 999);
+
+          const actionItem = this.actionItemRepository.create({
+            milestone: savedMilestone,
+            title: a.title,
+            description: a.description,
+            type: a.type || 'task',
+            frequency: a.frequency || null,
+            totalTarget: a.total_target || 1,
+            isOptional: a.is_optional || false,
+            targetDate: actionTargetDate,
+          });
+          await this.actionItemRepository.save(actionItem);
+        }
       }
     }
 
@@ -151,8 +185,9 @@ export class GoalsService {
   }
 
   async updateActionItem(actionItemId: string, isCompleted: boolean) {
-    const actionItem = await this.actionItemRepository.findOneBy({
-      id: actionItemId,
+    const actionItem = await this.actionItemRepository.findOne({
+      where: { id: actionItemId },
+      relations: ['milestone', 'milestone.goal', 'milestone.goal.user'],
     });
     if (!actionItem) {
       this.logger.warn(`Action item not found: ${actionItemId}`);
@@ -165,6 +200,9 @@ export class GoalsService {
     actionItem.isCompleted = isCompleted;
     if (isCompleted && actionItem.type === 'habit') {
       actionItem.completedCount += 1;
+      await this.xpService.addXpEvent(actionItem.milestone.goal.user, actionItem.title, `Habit Maintained x${actionItem.completedCount}`, 2);
+    } else if (isCompleted && actionItem.type === 'task') {
+      await this.xpService.addXpEvent(actionItem.milestone.goal.user, actionItem.title, 'Action Item Completed', 10);
     }
     return this.actionItemRepository.save(actionItem);
   }
@@ -214,11 +252,69 @@ export class GoalsService {
   async toggleStep(stepId: string, isCompleted: boolean) {
     const step = await this.taskStepRepository.findOne({
       where: { id: stepId },
+      relations: ['actionItem', 'actionItem.milestone', 'actionItem.milestone.goal', 'actionItem.milestone.goal.user'],
     });
     if (!step) throw new NotFoundException('Step not found');
 
     step.isCompleted = isCompleted;
     step.completedAt = isCompleted ? new Date() : undefined;
+    
+    if (isCompleted) {
+      await this.xpService.addXpEvent(step.actionItem.milestone.goal.user, step.text, 'Action Step Completed', 5);
+    }
+    
     return this.taskStepRepository.save(step);
+  }
+
+  async generateTasksForMilestone(milestoneId: string) {
+    const milestone = await this.milestoneRepository.findOne({
+      where: { id: milestoneId },
+      relations: ['goal', 'actionItems'],
+    });
+
+    if (!milestone) throw new NotFoundException('Milestone not found');
+
+    if (milestone.actionItems && milestone.actionItems.length > 0) {
+      this.logger.warn(`Milestone ${milestoneId} already has tasks, skipping generation.`);
+      return milestone;
+    }
+
+    this.logger.log(`Generating tasks on-demand for Milestone ${milestoneId}`);
+    
+    // In order to give context to AI, we tell it the start/end dates
+    const startDate = milestone.goal.startDate.toISOString();
+    const milestoneTarget = milestone.targetDate.toISOString();
+
+    const result = await this.aiService.generateTasksForMilestone(
+      milestone.goal.title,
+      milestone.title,
+      milestone.description,
+      startDate,
+      milestoneTarget
+    );
+
+    if (result && result.action_items) {
+      for (const a of result.action_items) {
+        const actionTargetDate = a.target_date ? new Date(a.target_date) : new Date(milestoneTarget);
+        actionTargetDate.setHours(23, 59, 59, 999);
+
+        const actionItem = this.actionItemRepository.create({
+          milestone: milestone,
+          title: a.title,
+          description: a.description,
+          type: a.type || 'task',
+          frequency: a.frequency || null,
+          totalTarget: a.total_target || 1,
+          isOptional: a.is_optional || false,
+          targetDate: actionTargetDate,
+        });
+        await this.actionItemRepository.save(actionItem);
+      }
+    }
+
+    return this.milestoneRepository.findOne({
+      where: { id: milestoneId },
+      relations: ['actionItems', 'actionItems.steps'],
+    });
   }
 }

@@ -1,4 +1,4 @@
-# ezucute
+# ezecute
 
 A new Flutter project.
 

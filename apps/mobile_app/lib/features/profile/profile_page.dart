@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:ezucute/features/auth/auth_page.dart';
-import 'package:ezucute/core/api/api_service.dart';
+import 'package:ezecute/features/auth/auth_page.dart';
+import 'package:ezecute/core/api/api_service.dart';
 
-import 'package:ezucute/features/profile/missions_page.dart';
-import 'package:ezucute/features/profile/settings_page.dart';
-import 'package:ezucute/features/profile/privacy_page.dart';
-import 'package:ezucute/features/profile/notifications_page.dart';
-import 'package:ezucute/features/friends/friends_page.dart';
-import 'package:ezucute/features/friends/leaderboard_page.dart';
-import 'package:ezucute/data/app_data_store.dart';
+import 'package:ezecute/features/profile/missions_page.dart';
+import 'package:ezecute/features/profile/settings_page.dart';
+import 'package:ezecute/features/profile/privacy_page.dart';
+import 'package:ezecute/features/profile/notifications_page.dart';
+import 'package:ezecute/features/friends/friends_page.dart';
+import 'package:ezecute/features/friends/leaderboard_page.dart';
+import 'package:ezecute/data/app_data_store.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:ezecute/features/profile/xp_history_page.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -180,6 +181,16 @@ class ProfilePage extends StatelessWidget {
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const MissionsPage()),
+          ),
+        ),
+        _buildMenuItem(
+          context,
+          LucideIcons.history,
+          'XP History',
+          subtitle: 'View your earned experience points',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const XpHistoryPage()),
           ),
         ),
         _buildMenuItem(

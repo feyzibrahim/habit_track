@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:ezucute/core/theme/app_colors.dart';
+import 'package:ezecute/core/theme/app_colors.dart';
+import 'package:intl/intl.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 class RoadmapPreviewPage extends StatefulWidget {
@@ -184,6 +185,11 @@ class _RoadmapPreviewPageState extends State<RoadmapPreviewPage> {
     final isDark = theme.brightness == Brightness.dark;
     final order = milestone['weeks_from_start'] ?? (index + 1);
     final isCurrent = index == 0; // In preview, first item is "current"
+    
+    final targetDateStr = milestone['target_date'];
+    final dateStr = targetDateStr != null 
+        ? DateFormat('dd MMMM yyyy').format(DateTime.parse(targetDateStr))
+        : "PHASE $order";
 
     return IntrinsicHeight(
           child: Row(
@@ -240,13 +246,13 @@ class _RoadmapPreviewPageState extends State<RoadmapPreviewPage> {
                 child: Padding(
                   padding: const EdgeInsets.only(bottom: 40),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            "PHASE $order",
+                            dateStr.toUpperCase(),
                             style: theme.textTheme.labelSmall?.copyWith(
                               color: isCurrent
                                   ? theme.colorScheme.primary
@@ -278,7 +284,7 @@ class _RoadmapPreviewPageState extends State<RoadmapPreviewPage> {
                         ),
                       ),
                       const SizedBox(height: 24),
-                      if (milestone['action_items'] != null)
+                      if (milestone['action_items'] != null && (milestone['action_items'] as List).isNotEmpty)
                         Container(
                           width: double.infinity,
                           padding: const EdgeInsets.all(16),
@@ -293,15 +299,56 @@ class _RoadmapPreviewPageState extends State<RoadmapPreviewPage> {
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children:
-                                (milestone['action_items'] as List<dynamic>)
-                                    .map((action) {
-                                      return _buildActionMiniRow(
-                                        context,
-                                        action,
-                                      );
-                                    })
-                                    .toList(),
+                            children: () {
+                              final items = List<dynamic>.from(milestone['action_items'] as List<dynamic>);
+                              items.sort((a, b) {
+                                final dayA = a['day_from_start'] as int? ?? 999;
+                                final dayB = b['day_from_start'] as int? ?? 999;
+                                return dayA.compareTo(dayB);
+                              });
+                              return items.map((action) {
+                                return _buildActionMiniRow(
+                                  context,
+                                  action,
+                                  isCurrent,
+                                );
+                              }).toList();
+                            }(),
+                          ),
+                        )
+                      else
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                          decoration: BoxDecoration(
+                            color: (theme.cardTheme.color ?? theme.colorScheme.surface).withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: isDark
+                                  ? AppColors.darkBorder.withValues(alpha: 0.5)
+                                  : AppColors.lightBorder.withValues(alpha: 0.5),
+                              style: BorderStyle.solid,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                LucideIcons.calendarClock,
+                                size: 18,
+                                color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                              ),
+                              const SizedBox(width: 8),
+                              Flexible(
+                                child: Text(
+                                  "Tasks will be generated later",
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                     ],
@@ -335,61 +382,89 @@ class _RoadmapPreviewPageState extends State<RoadmapPreviewPage> {
     );
   }
 
-  Widget _buildActionMiniRow(BuildContext context, dynamic action) {
+  Widget _buildActionMiniRow(BuildContext context, dynamic action, bool isCurrent) {
     final theme = Theme.of(context);
     final type = action['type'] ?? 'task';
     final target = action['total_target'] ?? 1;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
+    return Theme(
+      data: theme.copyWith(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+        tilePadding: const EdgeInsets.symmetric(horizontal: 4),
+        childrenPadding: const EdgeInsets.fromLTRB(36, 0, 4, 8),
+        iconColor: theme.colorScheme.primary,
+        collapsedIconColor: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+        title: Row(
+          children: [
+            Icon(
+              LucideIcons.circle,
+              size: 18,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                action['title'] ?? 'Action',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            if (type == 'habit')
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  "0/$target (+2 XP)",
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 9,
+                  ),
+                ),
+              )
+            else
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  "+10 XP",
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: Colors.amber,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 9,
+                  ),
+                ),
+              ),
+          ],
+        ),
         children: [
-          Icon(
-            LucideIcons.circle,
-            size: 18,
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              action['title'] ?? 'Action',
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: Row(
+              children: [
+                  Icon(
+                    LucideIcons.lock,
+                    size: 14,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    "Initialize the roadmap to view more",
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontSize: 11,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                    ),
+                  ),
+              ],
             ),
           ),
-          if (type == 'habit')
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                "0/$target (+2 XP)",
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 9,
-                ),
-              ),
-            )
-          else
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: Colors.amber.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                "+10 XP",
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: Colors.amber,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 9,
-                ),
-              ),
-            ),
         ],
       ),
     );

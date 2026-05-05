@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:ezucute/core/theme/app_colors.dart';
-import 'package:ezucute/features/friends/leaderboard_page.dart';
-import 'package:ezucute/features/home/home_page.dart';
-import 'package:ezucute/features/profile/profile_page.dart';
-import 'package:ezucute/features/planning/timeline_page.dart';
-import 'package:ezucute/features/planning/planning_page.dart';
+import 'package:ezecute/core/theme/app_colors.dart';
+import 'package:ezecute/features/friends/leaderboard_page.dart';
+import 'package:ezecute/features/home/home_page.dart';
+import 'package:ezecute/features/chat/chat_page.dart';
+import 'package:ezecute/features/planning/timeline_page.dart';
+import 'package:ezecute/features/planning/planning_page.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class NavItem {
@@ -201,7 +201,7 @@ class _AppShellState extends State<AppShell> {
         label: 'Leaderboard',
         page: const LeaderboardPage(),
       ),
-      NavItem(icon: LucideIcons.user, label: 'Profile', page: ProfilePage()),
+      NavItem(icon: LucideIcons.sparkles, label: 'AI Chat', page: const AiCoachPage()),
     ];
   }
 

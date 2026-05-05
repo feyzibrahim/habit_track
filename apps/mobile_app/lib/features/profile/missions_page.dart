@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:ezucute/data/app_data_store.dart';
-import 'package:ezucute/core/theme/app_colors.dart';
+import 'package:ezecute/data/app_data_store.dart';
+import 'package:ezecute/core/theme/app_colors.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 class MissionsPage extends StatelessWidget {

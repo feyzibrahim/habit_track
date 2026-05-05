@@ -4,6 +4,12 @@ class Goal {
   final String description;
   final String prompt;
   final String feasibility;
+  final String? feasibilityReason;
+  final String? strategicAnalysis;
+  final int probabilityRatio;
+  final List<String> keyChallenges;
+  final List<Map<String, dynamic>> graphData;
+  final String category;
   final int durationDays;
   final DateTime? startDate;
   final DateTime? targetDate;
@@ -16,6 +22,12 @@ class Goal {
     required this.description,
     required this.prompt,
     required this.feasibility,
+    this.feasibilityReason,
+    this.strategicAnalysis,
+    this.probabilityRatio = 0,
+    this.keyChallenges = const [],
+    this.graphData = const [],
+    required this.category,
     required this.durationDays,
     this.startDate,
     this.targetDate,
@@ -25,15 +37,23 @@ class Goal {
 
   factory Goal.fromJson(Map<String, dynamic> json) {
     return Goal(
-      id: json['id'],
-      title: json['title'],
+      id: json['id'] ?? '',
+      title: json['title'] ?? '',
       description: json['description'] ?? '',
-      prompt: json['prompt'],
-      feasibility: json['feasibility'],
+      prompt: json['prompt'] ?? '',
+      feasibility: json['feasibility'] ?? 'moderate',
+      feasibilityReason: json['feasibilityReason'],
+      strategicAnalysis: json['strategicAnalysis'],
+      probabilityRatio: json['probabilityRatio'] ?? 0,
+      keyChallenges: List<String>.from(json['keyChallenges'] ?? []),
+      graphData: (json['graphData'] as List? ?? [])
+          .map((item) => Map<String, dynamic>.from(item))
+          .toList(),
+      category: json['category'] ?? 'other',
       durationDays: json['durationDays'] ?? 90,
-      startDate: json['startDate'] != null ? DateTime.parse(json['startDate']) : null,
-      targetDate: json['targetDate'] != null ? DateTime.parse(json['targetDate']) : null,
-      status: json['status'],
+      startDate: json['startDate'] != null ? DateTime.tryParse(json['startDate']) : null,
+      targetDate: json['targetDate'] != null ? DateTime.tryParse(json['targetDate']) : null,
+      status: json['status'] ?? 'active',
       milestones: (json['milestones'] as List? ?? [])
           .map((m) => Milestone.fromJson(m))
           .toList(),
@@ -84,6 +104,8 @@ class ActionItem {
   final bool isCompleted;
   final int completedCount;
   final int totalTarget;
+  final DateTime? targetDate;
+  final bool isOptional;
   final List<TaskStep> steps;
 
   ActionItem({
@@ -95,6 +117,8 @@ class ActionItem {
     required this.isCompleted,
     required this.completedCount,
     required this.totalTarget,
+    this.targetDate,
+    this.isOptional = false,
     this.steps = const [],
   });
 
@@ -108,6 +132,8 @@ class ActionItem {
       isCompleted: json['isCompleted'] ?? false,
       completedCount: json['completedCount'] ?? 0,
       totalTarget: json['totalTarget'] ?? 1,
+      targetDate: json['targetDate'] != null ? DateTime.parse(json['targetDate']) : null,
+      isOptional: json['isOptional'] ?? false,
       steps: (json['steps'] as List? ?? [])
           .map((s) => TaskStep.fromJson(s))
           .toList(),
@@ -123,6 +149,8 @@ class ActionItem {
     bool? isCompleted,
     int? completedCount,
     int? totalTarget,
+    DateTime? targetDate,
+    bool? isOptional,
     List<TaskStep>? steps,
   }) {
     return ActionItem(
@@ -134,6 +162,8 @@ class ActionItem {
       isCompleted: isCompleted ?? this.isCompleted,
       completedCount: completedCount ?? this.completedCount,
       totalTarget: totalTarget ?? this.totalTarget,
+      targetDate: targetDate ?? this.targetDate,
+      isOptional: isOptional ?? this.isOptional,
       steps: steps ?? this.steps,
     );
   }

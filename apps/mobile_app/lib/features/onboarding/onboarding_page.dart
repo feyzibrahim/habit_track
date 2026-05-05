@@ -1,9 +1,9 @@
-import 'package:ezucute/core/api/api_service.dart';
-import 'package:ezucute/core/theme/app_colors.dart';
-import 'package:ezucute/data/app_data_store.dart';
-import 'package:ezucute/features/auth/auth_page.dart';
-import 'package:ezucute/features/planning/roadmap_preview_page.dart';
-import 'package:ezucute/routes/app_shell.dart';
+import 'package:ezecute/core/api/api_service.dart';
+import 'package:ezecute/core/theme/app_colors.dart';
+import 'package:ezecute/data/app_data_store.dart';
+import 'package:ezecute/features/auth/auth_page.dart';
+import 'package:ezecute/features/planning/roadmap_preview_page.dart';
+import 'package:ezecute/routes/app_shell.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -38,6 +38,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
   final _customCategoryController = TextEditingController();
 
   int _selectedDuration = 90;
+  DateTime _startDate = DateTime.now();
 
   List<String> _questions = [];
   final List<TextEditingController> _answerControllers = [];
@@ -87,6 +88,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
         _promptController.text.trim(),
         durationDays: _selectedDuration,
         answers: answers,
+        startDate: _startDate.toIso8601String(),
       );
       setState(() {
         _aiResult = result;
@@ -99,6 +101,48 @@ class _OnboardingPageState extends State<OnboardingPage> {
     }
   }
 
+  Future<void> _generateRoadmapAndNavigate() async {
+    setState(() {
+      _isEvaluating = true;
+      _error = null;
+    });
+    HapticFeedback.mediumImpact();
+
+    final answers = <String, String>{};
+    for (int i = 0; i < _questions.length; i++) {
+      answers[_questions[i]] = _answerControllers[i].text.trim();
+    }
+
+    try {
+      final result = await ApiService.generateRoadmap(
+        _promptController.text.trim(),
+        durationDays: _selectedDuration,
+        answers: answers,
+        startDate: _startDate.toIso8601String(),
+      );
+      
+      final updatedResult = Map<String, dynamic>.from(_aiResult!);
+      updatedResult['plan'] = result['plan'];
+      
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => RoadmapPreviewPage(
+              initialAiResult: updatedResult,
+              onRefine: _refineRoadmap,
+              onInitialize: _startPlan,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() => _error = "Failed to generate roadmap.");
+    } finally {
+      if (mounted) setState(() => _isEvaluating = false);
+    }
+  }
+
   Future<Map<String, dynamic>?> _refineRoadmap(String prompt) async {
     setState(() => _isEvaluating = true);
     final answers = <String, String>{};
@@ -107,14 +151,17 @@ class _OnboardingPageState extends State<OnboardingPage> {
     }
 
     try {
-      final result = await ApiService.evaluateGoal(
+      final result = await ApiService.generateRoadmap(
         _promptController.text.trim(),
         durationDays: _selectedDuration,
         answers: answers,
+        startDate: _startDate.toIso8601String(),
         previousPlan: _aiResult,
         refinementPrompt: prompt,
       );
-      return result;
+      final updatedResult = Map<String, dynamic>.from(_aiResult!);
+      updatedResult['plan'] = result['plan'];
+      return updatedResult;
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -132,7 +179,9 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
     setState(() => _isEvaluating = true);
     try {
-      final category = _selectedCategory == 'other' && _customCategoryController.text.trim().isNotEmpty
+      final category =
+          _selectedCategory == 'other' &&
+              _customCategoryController.text.trim().isNotEmpty
           ? _customCategoryController.text.trim()
           : _selectedCategory;
 
@@ -141,6 +190,8 @@ class _OnboardingPageState extends State<OnboardingPage> {
         _aiResult!,
         durationDays: _selectedDuration,
         category: category,
+        feasibility: _aiResult!['feasibility'],
+        startDate: _startDate.toIso8601String(),
       );
       await AppDataStore().refreshData();
       if (mounted) {
@@ -414,6 +465,74 @@ class _OnboardingPageState extends State<OnboardingPage> {
           ),
         ).animate().fade(delay: 600.ms).slideX(begin: 0.1),
 
+        const SizedBox(height: 32),
+
+        _buildSectionTitle(context, "START DATE"),
+        const SizedBox(height: 12),
+        GestureDetector(
+          onTap: () async {
+            HapticFeedback.selectionClick();
+            final DateTime? picked = await showDatePicker(
+              context: context,
+              initialDate: _startDate,
+              firstDate: DateTime.now().subtract(const Duration(days: 1)),
+              lastDate: DateTime.now().add(const Duration(days: 365)),
+              builder: (context, child) {
+                return Theme(
+                  data: theme.copyWith(
+                    colorScheme: isDark ? const ColorScheme.dark(
+                      primary: AppColors.darkAccent,
+                      onPrimary: Colors.white,
+                      surface: AppColors.darkSurface,
+                      onSurface: Colors.white,
+                    ) : const ColorScheme.light(
+                      primary: AppColors.lightAccent,
+                      onPrimary: Colors.white,
+                      surface: Colors.white,
+                      onSurface: Colors.black,
+                    ),
+                  ),
+                  child: child!,
+                );
+              },
+            );
+            if (picked != null && picked != _startDate) {
+              setState(() {
+                _startDate = picked;
+              });
+            }
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            decoration: BoxDecoration(
+              color: theme.cardTheme.color,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  LucideIcons.calendar,
+                  color: theme.colorScheme.primary,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  _startDate.year == DateTime.now().year && _startDate.month == DateTime.now().month && _startDate.day == DateTime.now().day
+                      ? "Today"
+                      : "${_startDate.day}/${_startDate.month}/${_startDate.year}",
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ).animate().fade(delay: 700.ms).slideX(begin: 0.1),
+
         const SizedBox(height: 48),
 
         if (_error != null)
@@ -651,32 +770,30 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
         if (isPossible)
           ElevatedButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => RoadmapPreviewPage(
-                    initialAiResult: _aiResult!,
-                    onRefine: _refineRoadmap,
-                    onInitialize: _startPlan,
-                  ),
-                ),
-              );
-            },
+            onPressed: _isEvaluating ? null : _generateRoadmapAndNavigate,
             style: ElevatedButton.styleFrom(
               minimumSize: const Size(double.infinity, 64),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                Text("View Proposed Roadmap"),
-                SizedBox(width: 8),
-                Icon(LucideIcons.arrowRight, size: 20),
-              ],
-            ),
+            child: _isEvaluating
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const [
+                      Text("View Proposed Roadmap"),
+                      SizedBox(width: 8),
+                      Icon(LucideIcons.arrowRight, size: 20),
+                    ],
+                  ),
           ).animate().fade(delay: 800.ms).scaleY(begin: 0.8)
         else
           TextButton(

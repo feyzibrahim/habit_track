@@ -1,5 +1,5 @@
-import 'package:ezucute/core/models/goal_model.dart';
-import 'package:ezucute/core/theme/app_colors.dart';
+import 'package:ezecute/core/models/goal_model.dart';
+import 'package:ezecute/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 class MissionWidgetView extends StatelessWidget {

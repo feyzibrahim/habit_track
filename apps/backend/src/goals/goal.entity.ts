@@ -42,6 +42,21 @@ export class Goal {
   @Column({ default: 'planning' })
   status: string; // 'planning', 'active', 'completed', 'failed'
 
+  @Column({ type: 'text', nullable: true })
+  feasibilityReason: string;
+
+  @Column({ type: 'text', nullable: true })
+  strategicAnalysis: string;
+
+  @Column({ type: 'int', default: 0 })
+  probabilityRatio: number;
+
+  @Column({ type: 'json', nullable: true })
+  keyChallenges: string[];
+
+  @Column({ type: 'json', nullable: true })
+  graphData: any;
+
   @ManyToOne(() => User, (user) => user.goals)
   user: User;
 

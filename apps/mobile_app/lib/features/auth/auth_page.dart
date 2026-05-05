@@ -1,7 +1,7 @@
-import 'package:ezucute/core/api/api_service.dart';
-import 'package:ezucute/data/app_data_store.dart';
-import 'package:ezucute/features/onboarding/onboarding_page.dart';
-import 'package:ezucute/routes/app_shell.dart';
+import 'package:ezecute/core/api/api_service.dart';
+import 'package:ezecute/data/app_data_store.dart';
+import 'package:ezecute/features/onboarding/onboarding_page.dart';
+import 'package:ezecute/routes/app_shell.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -157,7 +157,7 @@ class _AuthPageState extends State<AuthPage> {
 
                   SizedBox(height: 24.h),
                   Text(
-                    'Habit Architect',
+                    'Ezecute Architect',
                     textAlign: TextAlign.center,
                     style: theme.textTheme.displayLarge?.copyWith(
                       fontSize: 32.sp,
@@ -312,4 +312,3 @@ class _AuthPageState extends State<AuthPage> {
     );
   }
 }
-

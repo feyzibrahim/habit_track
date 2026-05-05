@@ -1,5 +1,5 @@
-import 'package:ezucute/core/api/api_service.dart';
-import 'package:ezucute/data/app_data_store.dart';
+import 'package:ezecute/core/api/api_service.dart';
+import 'package:ezecute/data/app_data_store.dart';
 import 'package:flutter/material.dart';
 
 class SettingsPage extends StatefulWidget {

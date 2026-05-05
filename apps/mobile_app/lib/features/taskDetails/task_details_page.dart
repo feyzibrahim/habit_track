@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:confetti/confetti.dart';
-import 'package:ezucute/data/app_data_store.dart';
-import 'package:ezucute/core/models/goal_model.dart';
-import 'package:ezucute/core/theme/app_colors.dart';
+import 'package:ezecute/data/app_data_store.dart';
+import 'package:ezecute/core/models/goal_model.dart';
+import 'package:ezecute/core/theme/app_colors.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 class TaskDetailsPage extends StatefulWidget {
@@ -72,6 +72,22 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
         setState(() => _isGenerating = false);
       }
     }
+  }
+
+  void _triggerXpAnimation(int xp) {
+    HapticFeedback.heavyImpact();
+    _confettiController.play();
+    setState(() {
+      _showXpAnimation = true;
+      _xpGained = xp;
+    });
+    Future.delayed(const Duration(milliseconds: 2500), () {
+      if (mounted) {
+        setState(() {
+          _showXpAnimation = false;
+        });
+      }
+    });
   }
 
   @override
@@ -417,8 +433,12 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: GestureDetector(
-        onTap: () =>
-            AppDataStore().toggleTaskStep(task.id, step.id, step.isCompleted),
+        onTap: () {
+          if (!step.isCompleted) {
+            _triggerXpAnimation(5);
+          }
+          AppDataStore().toggleTaskStep(task.id, step.id, step.isCompleted);
+        },
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -457,6 +477,22 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
                   ),
                 ),
               ),
+              if (!step.isCompleted)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    "+5 XP",
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: Colors.amber,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 10,
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
@@ -508,19 +544,7 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
                 : () {
                     AppDataStore().toggleActionItem(task.id, task.isCompleted);
                     if (!isMainDone) {
-                      HapticFeedback.heavyImpact();
-                      _confettiController.play();
-                      setState(() {
-                        _showXpAnimation = true;
-                        _xpGained = task.type == 'habit' ? 2 : 10;
-                      });
-                      Future.delayed(const Duration(milliseconds: 2500), () {
-                        if (mounted) {
-                          setState(() {
-                            _showXpAnimation = false;
-                          });
-                        }
-                      });
+                      _triggerXpAnimation(task.type == 'habit' ? 2 : 10);
                     }
                   },
             style: ElevatedButton.styleFrom(

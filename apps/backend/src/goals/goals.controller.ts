@@ -29,8 +29,7 @@ export class GoalsController {
       prompt: string;
       durationDays?: number;
       answers?: Record<string, string>;
-      previousPlan?: any;
-      refinementPrompt?: string;
+      startDate?: string;
     },
   ) {
     return this.goalsService.evaluateGoal(
@@ -38,14 +37,36 @@ export class GoalsController {
       body.prompt,
       body.durationDays,
       body.answers,
+    );
+  }
+
+  @Post('roadmap')
+  async roadmap(
+    @Request() req,
+    @Body()
+    body: {
+      prompt: string;
+      durationDays?: number;
+      answers?: Record<string, string>;
+      previousPlan?: any;
+      refinementPrompt?: string;
+      startDate?: string;
+    },
+  ) {
+    return this.goalsService.generateRoadmap(
+      req.user.id,
+      body.prompt,
+      body.durationDays,
+      body.answers,
       body.previousPlan,
       body.refinementPrompt,
+      body.startDate,
     );
   }
 
   @Post()
-  async create(@Request() req, @Body() body: { prompt: string; aiPlan: any; durationDays?: number; category?: string }) {
-    return this.goalsService.createGoal(req.user, body.prompt, body.aiPlan, body.durationDays, body.category);
+  async create(@Request() req, @Body() body: { prompt: string; aiPlan: any; durationDays?: number; category?: string; feasibility?: string; startDate?: string }) {
+    return this.goalsService.createGoal(req.user, body.prompt, body.aiPlan, body.durationDays, body.category, body.feasibility, body.startDate);
   }
 
   @Get()
@@ -64,6 +85,11 @@ export class GoalsController {
   @Post('action-items/:id/generate-steps')
   async generateSteps(@Param('id') id: string) {
     return this.goalsService.generateAndSaveSteps(id);
+  }
+
+  @Post('milestones/:id/generate-tasks')
+  async generateTasks(@Param('id') id: string) {
+    return this.goalsService.generateTasksForMilestone(id);
   }
 
   @Patch('steps/:id')

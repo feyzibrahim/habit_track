@@ -1,6 +1,6 @@
-import 'package:ezucute/core/api/api_service.dart';
-import 'package:ezucute/core/theme/app_colors.dart';
-import 'package:ezucute/data/app_data_store.dart';
+import 'package:ezecute/core/api/api_service.dart';
+import 'package:ezecute/core/theme/app_colors.dart';
+import 'package:ezecute/data/app_data_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -35,6 +35,7 @@ class _PlanningPageState extends State<PlanningPage> {
   final _customCategoryController = TextEditingController();
 
   int _selectedDuration = 90;
+  DateTime _startDate = DateTime.now();
 
   List<String> _questions = [];
   final List<TextEditingController> _answerControllers = [];
@@ -84,6 +85,7 @@ class _PlanningPageState extends State<PlanningPage> {
         _promptController.text.trim(),
         durationDays: _selectedDuration,
         answers: answers,
+        startDate: _startDate.toIso8601String(),
       );
       setState(() {
         _aiResult = result;
@@ -91,6 +93,36 @@ class _PlanningPageState extends State<PlanningPage> {
       });
     } catch (e) {
       setState(() => _error = "Something went wrong. High traffic maybe?");
+    } finally {
+      setState(() => _isEvaluating = false);
+    }
+  }
+
+  Future<void> _generateRoadmap() async {
+    setState(() {
+      _isEvaluating = true;
+      _error = null;
+    });
+    HapticFeedback.mediumImpact();
+
+    final answers = <String, String>{};
+    for (int i = 0; i < _questions.length; i++) {
+      answers[_questions[i]] = _answerControllers[i].text.trim();
+    }
+
+    try {
+      final result = await ApiService.generateRoadmap(
+        _promptController.text.trim(),
+        durationDays: _selectedDuration,
+        answers: answers,
+        startDate: _startDate.toIso8601String(),
+      );
+      setState(() {
+        _aiResult!['plan'] = result['plan'];
+        _step = 3;
+      });
+    } catch (e) {
+      setState(() => _error = "Failed to generate roadmap.");
     } finally {
       setState(() => _isEvaluating = false);
     }
@@ -104,14 +136,17 @@ class _PlanningPageState extends State<PlanningPage> {
     }
 
     try {
-      final result = await ApiService.evaluateGoal(
+      final result = await ApiService.generateRoadmap(
         _promptController.text.trim(),
         durationDays: _selectedDuration,
         answers: answers,
+        startDate: _startDate.toIso8601String(),
         previousPlan: _aiResult,
         refinementPrompt: prompt,
       );
-      return result;
+      final updatedResult = Map<String, dynamic>.from(_aiResult!);
+      updatedResult['plan'] = result['plan'];
+      return updatedResult;
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -129,7 +164,9 @@ class _PlanningPageState extends State<PlanningPage> {
 
     setState(() => _isEvaluating = true);
     try {
-      final category = _selectedCategory == 'other' && _customCategoryController.text.trim().isNotEmpty
+      final category =
+          _selectedCategory == 'other' &&
+              _customCategoryController.text.trim().isNotEmpty
           ? _customCategoryController.text.trim()
           : _selectedCategory;
 
@@ -138,6 +175,8 @@ class _PlanningPageState extends State<PlanningPage> {
         _aiResult!,
         durationDays: _selectedDuration,
         category: category,
+        feasibility: _aiResult!['feasibility'],
+        startDate: _startDate.toIso8601String(),
       );
       await AppDataStore().refreshData();
       if (mounted) {
@@ -364,6 +403,74 @@ class _PlanningPageState extends State<PlanningPage> {
             }).toList(),
           ),
         ).animate().fade(delay: 600.ms).slideX(begin: 0.1),
+
+        const SizedBox(height: 32),
+
+        _buildSectionTitle(context, "START DATE"),
+        const SizedBox(height: 12),
+        GestureDetector(
+          onTap: () async {
+            HapticFeedback.selectionClick();
+            final DateTime? picked = await showDatePicker(
+              context: context,
+              initialDate: _startDate,
+              firstDate: DateTime.now().subtract(const Duration(days: 1)),
+              lastDate: DateTime.now().add(const Duration(days: 365)),
+              builder: (context, child) {
+                return Theme(
+                  data: theme.copyWith(
+                    colorScheme: isDark ? const ColorScheme.dark(
+                      primary: AppColors.darkAccent,
+                      onPrimary: Colors.white,
+                      surface: AppColors.darkSurface,
+                      onSurface: Colors.white,
+                    ) : const ColorScheme.light(
+                      primary: AppColors.lightAccent,
+                      onPrimary: Colors.white,
+                      surface: Colors.white,
+                      onSurface: Colors.black,
+                    ),
+                  ),
+                  child: child!,
+                );
+              },
+            );
+            if (picked != null && picked != _startDate) {
+              setState(() {
+                _startDate = picked;
+              });
+            }
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            decoration: BoxDecoration(
+              color: theme.cardTheme.color,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  LucideIcons.calendar,
+                  color: theme.colorScheme.primary,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  _startDate.year == DateTime.now().year && _startDate.month == DateTime.now().month && _startDate.day == DateTime.now().day
+                      ? "Today"
+                      : "${_startDate.day}/${_startDate.month}/${_startDate.year}",
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ).animate().fade(delay: 700.ms).slideX(begin: 0.1),
 
         const SizedBox(height: 48),
 
@@ -602,23 +709,30 @@ class _PlanningPageState extends State<PlanningPage> {
 
         if (isPossible)
           ElevatedButton(
-            onPressed: () {
-              setState(() => _step = 3);
-            },
+            onPressed: _isEvaluating ? null : _generateRoadmap,
             style: ElevatedButton.styleFrom(
               minimumSize: const Size(double.infinity, 64),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                Text("View Proposed Roadmap"),
-                SizedBox(width: 8),
-                Icon(LucideIcons.arrowRight, size: 20),
-              ],
-            ),
+            child: _isEvaluating
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const [
+                      Text("View Proposed Roadmap"),
+                      SizedBox(width: 8),
+                      Icon(LucideIcons.arrowRight, size: 20),
+                    ],
+                  ),
           ).animate().fade(delay: 800.ms).scaleY(begin: 0.8)
         else
           TextButton(
@@ -858,6 +972,7 @@ class _PlanningPageState extends State<PlanningPage> {
                                       return _buildActionMiniRow(
                                         context,
                                         action,
+                                        isCurrent,
                                       );
                                     })
                                     .toList(),
@@ -894,61 +1009,105 @@ class _PlanningPageState extends State<PlanningPage> {
     );
   }
 
-  Widget _buildActionMiniRow(BuildContext context, dynamic action) {
+  Widget _buildActionMiniRow(BuildContext context, dynamic action, bool isCurrent) {
     final theme = Theme.of(context);
     final type = action['type'] ?? 'task';
     final target = action['total_target'] ?? 1;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
+    return Theme(
+      data: theme.copyWith(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+        tilePadding: const EdgeInsets.symmetric(horizontal: 4),
+        childrenPadding: const EdgeInsets.fromLTRB(36, 0, 4, 8),
+        iconColor: theme.colorScheme.primary,
+        collapsedIconColor: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+        title: Row(
+          children: [
+            Icon(
+              LucideIcons.circle,
+              size: 18,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                action['title'] ?? 'Action',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            if (type == 'habit')
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  "0/$target (+2 XP)",
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 9,
+                  ),
+                ),
+              )
+            else
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  "+10 XP",
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: Colors.amber,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 9,
+                  ),
+                ),
+              ),
+          ],
+        ),
         children: [
-          Icon(
-            LucideIcons.circle,
-            size: 18,
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              action['title'] ?? 'Action',
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: Row(
+              children: [
+                if (isCurrent) ...[
+                  const SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    "Generating AI Blueprint...",
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontSize: 11,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                    ),
+                  ),
+                ] else ...[
+                  Icon(
+                    LucideIcons.lock,
+                    size: 14,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    "Initialize the roadmap to view more",
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontSize: 11,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
-          if (type == 'habit')
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                "0/$target (+2 XP)",
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 9,
-                ),
-              ),
-            )
-          else
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: Colors.amber.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                "+10 XP",
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: Colors.amber,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 9,
-                ),
-              ),
-            ),
         ],
       ),
     );

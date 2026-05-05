@@ -1,6 +1,7 @@
-import 'package:ezucute/core/api/api_service.dart';
-import 'package:ezucute/core/models/goal_model.dart' as goals;
-import 'package:ezucute/features/home/mission_widget_view.dart';
+import 'package:ezecute/core/api/api_service.dart';
+import 'package:ezecute/core/models/goal_model.dart' as goals;
+import 'package:ezecute/features/home/mission_widget_view.dart';
+import 'package:ezecute/core/models/xp_event_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io' show Platform;
@@ -17,6 +18,7 @@ class AppDataStore extends ChangeNotifier {
   String? _activeGoalId;
   Map<String, dynamic>? userData;
   bool isLoading = false;
+  List<XpEvent> xpHistory = [];
 
   goals.Goal? get activeGoal {
     if (currentGoals.isEmpty) return null;
@@ -54,6 +56,7 @@ class AppDataStore extends ChangeNotifier {
     try {
       await fetchProfile();
       await fetchGoals(skipNotify: true);
+      await fetchXpHistory();
     } catch (e) {
       debugPrint("Failed to refresh data: $e");
     } finally {
@@ -69,6 +72,16 @@ class AppDataStore extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       debugPrint("Failed to fetch profile: $e");
+    }
+  }
+
+  Future<void> fetchXpHistory() async {
+    try {
+      final data = await ApiService.getXpHistory();
+      xpHistory = data.map((e) => XpEvent.fromJson(e)).toList();
+      notifyListeners();
+    } catch (e) {
+      debugPrint("Failed to fetch XP history: $e");
     }
   }
 
@@ -157,6 +170,29 @@ class AppDataStore extends ChangeNotifier {
     }
   }
 
+  /// Generates tasks for an empty milestone
+  Future<goals.Milestone?> generateTasksForMilestone(String milestoneId) async {
+    try {
+      final data = await ApiService.generateTasksForMilestone(milestoneId);
+      final updatedMilestone = goals.Milestone.fromJson(data);
+
+      // Update in local state
+      if (activeGoal != null) {
+        for (int i = 0; i < activeGoal!.milestones.length; i++) {
+          if (activeGoal!.milestones[i].id == milestoneId) {
+            activeGoal!.milestones[i] = updatedMilestone;
+            notifyListeners();
+            return updatedMilestone;
+          }
+        }
+      }
+      return updatedMilestone;
+    } catch (e) {
+      debugPrint("Failed to generate milestone tasks: $e");
+      rethrow;
+    }
+  }
+
   /// Toggles a specific step within a task
   Future<void> toggleTaskStep(
     String actionItemId,
@@ -196,12 +232,85 @@ class AppDataStore extends ChangeNotifier {
     }
   }
 
-  /// Aggregates all tasks from the current milestone for the current day
+  /// Aggregates tasks for the current day
   List<goals.ActionItem> get todaysDailyTasks {
     final List<goals.ActionItem> tasks = [];
     final milestone = _currentMilestone;
     if (milestone != null) {
-      tasks.addAll(milestone.actionItems);
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      
+      for (var task in milestone.actionItems) {
+        if (task.targetDate != null) {
+          final target = DateTime(task.targetDate!.year, task.targetDate!.month, task.targetDate!.day);
+          if (target.isAtSameMomentAs(today)) {
+            tasks.add(task);
+          }
+        } else {
+          tasks.add(task);
+        }
+      }
+      
+      tasks.sort((a, b) {
+        if (a.targetDate == null && b.targetDate == null) return 0;
+        if (a.targetDate == null) return 1;
+        if (b.targetDate == null) return -1;
+        return a.targetDate!.compareTo(b.targetDate!);
+      });
+    }
+    return tasks;
+  }
+
+  /// Aggregates past/overdue tasks
+  List<goals.ActionItem> get pastDaysTasks {
+    final List<goals.ActionItem> tasks = [];
+    final milestone = _currentMilestone;
+    if (milestone != null) {
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      
+      for (var task in milestone.actionItems) {
+        if (task.targetDate != null) {
+          final target = DateTime(task.targetDate!.year, task.targetDate!.month, task.targetDate!.day);
+          if (target.isBefore(today)) {
+            tasks.add(task);
+          }
+        }
+      }
+      
+      tasks.sort((a, b) {
+        if (a.targetDate == null && b.targetDate == null) return 0;
+        if (a.targetDate == null) return 1;
+        if (b.targetDate == null) return -1;
+        return a.targetDate!.compareTo(b.targetDate!);
+      });
+    }
+    return tasks;
+  }
+
+  /// Aggregates tasks scheduled for future days
+  List<goals.ActionItem> get otherDaysTasks {
+    final List<goals.ActionItem> tasks = [];
+    final milestone = _currentMilestone;
+    if (milestone != null) {
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      
+      for (var task in milestone.actionItems) {
+        if (task.targetDate != null) {
+          final target = DateTime(task.targetDate!.year, task.targetDate!.month, task.targetDate!.day);
+          if (target.isAfter(today)) {
+            tasks.add(task);
+          }
+        }
+      }
+      
+      tasks.sort((a, b) {
+        if (a.targetDate == null && b.targetDate == null) return 0;
+        if (a.targetDate == null) return 1;
+        if (b.targetDate == null) return -1;
+        return a.targetDate!.compareTo(b.targetDate!);
+      });
     }
     return tasks;
   }
@@ -237,6 +346,9 @@ class AppDataStore extends ChangeNotifier {
         for (var a in m.actionItems) {
           if (a.isCompleted) score += 10;
           if (a.type == 'habit') score += (a.completedCount * 2);
+          for (var s in a.steps) {
+            if (s.isCompleted) score += 5;
+          }
         }
       }
     }

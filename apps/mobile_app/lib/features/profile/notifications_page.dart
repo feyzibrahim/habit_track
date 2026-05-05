@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:ezucute/core/api/api_service.dart';
-import 'package:ezucute/data/app_data_store.dart';
+import 'package:ezecute/core/api/api_service.dart';
+import 'package:ezecute/data/app_data_store.dart';
 
 class NotificationsPage extends StatefulWidget {
   const NotificationsPage({super.key});

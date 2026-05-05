@@ -8,10 +8,13 @@ import { GoalsService } from './goals.service';
 import { Milestone } from './milestone.entity';
 import { TaskStep } from './task-step.entity';
 
+import { XpModule } from '../xp/xp.module';
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([Goal, Milestone, ActionItem, TaskStep]),
     AiModule,
+    XpModule,
   ],
   controllers: [GoalsController],
   providers: [GoalsService],
