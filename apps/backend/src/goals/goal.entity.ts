@@ -51,6 +51,9 @@ export class Goal {
   @Column({ type: 'int', default: 0 })
   probabilityRatio: number;
 
+  @Column({ type: 'int', default: 0 })
+  initialProbabilityRatio: number;
+
   @Column({ type: 'json', nullable: true })
   keyChallenges: string[];
 

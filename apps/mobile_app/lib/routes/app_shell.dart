@@ -6,7 +6,7 @@ import 'package:ezecute/core/theme/app_colors.dart';
 import 'package:ezecute/features/friends/leaderboard_page.dart';
 import 'package:ezecute/features/home/home_page.dart';
 import 'package:ezecute/features/chat/chat_page.dart';
-import 'package:ezecute/features/planning/timeline_page.dart';
+import 'package:ezecute/features/planning/arena_page.dart';
 import 'package:ezecute/features/planning/planning_page.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -164,6 +164,11 @@ class _NavBarItem extends StatelessWidget {
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
 
+  static void switchTab(BuildContext context, int index) {
+    final state = context.findAncestorStateOfType<_AppShellState>();
+    state?._onNavTap(index);
+  }
+
   @override
   State<AppShell> createState() => _AppShellState();
 }
@@ -191,9 +196,9 @@ class _AppShellState extends State<AppShell> {
         page: HomePage(),
       ),
       NavItem(
-        icon: LucideIcons.calendar,
-        label: 'Timeline',
-        page: TimelinePage(),
+        icon: LucideIcons.swords,
+        label: 'Arena',
+        page: const ArenaPage(),
       ),
       NavItem(icon: LucideIcons.plus, label: 'Plan', page: PlanningPage()),
       NavItem(

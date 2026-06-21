@@ -5,13 +5,23 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { GoogleGenAI } from '@google/genai';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Goal } from '../goals/goal.entity';
+import { User } from '../users/user.entity';
 
 @Injectable()
 export class AiService {
   private readonly logger = new Logger(AiService.name);
   private client: GoogleGenAI;
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    @InjectRepository(Goal)
+    private goalRepository: Repository<Goal>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
+  ) {
     const apiKey = this.configService.get<string>('GEMINI_API_KEY');
     if (!apiKey || apiKey === 'your_gemini_api_key_here') {
       this.logger.warn('GEMINI_API_KEY is not configured correctly in .env');
@@ -341,7 +351,7 @@ export class AiService {
     throw new InternalServerErrorException('Failed to generate questions');
   }
 
-  async generateChat(message: string): Promise<{ response: string }> {
+  async generateChat(userId: string, message: string): Promise<{ response: string }> {
     if (this.configService.get<string>('MOCK_AI') === 'true') {
       this.logger.log(
         'MOCK_AI is enabled, returning simulated generateChat response',
@@ -351,9 +361,50 @@ export class AiService {
       };
     }
 
-    const systemPrompt = `You are the Mission AI Coach. 
-    Help the user with their goals, habits, and strategy. 
-    Be concise, encouraging, and highly professional.`;
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    const activeGoals = await this.goalRepository.find({
+      where: { user: { id: userId }, status: 'active' },
+      relations: ['milestones', 'milestones.actionItems'],
+    });
+
+    const now = new Date();
+    const todayStr = now.toDateString();
+
+    const goalsContext = activeGoals.map(goal => {
+      let currentMilestone = goal.milestones.find(m => !m.isCompleted);
+      if (!currentMilestone && goal.milestones.length > 0) {
+        currentMilestone = goal.milestones[goal.milestones.length - 1];
+      }
+
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const todaysMissions = currentMilestone ? currentMilestone.actionItems.filter(item => {
+        if (!item.targetDate) return true;
+        const target = new Date(item.targetDate);
+        return target.getFullYear() === today.getFullYear() &&
+               target.getMonth() === today.getMonth() &&
+               target.getDate() === today.getDate();
+      }) : [];
+
+      return `Goal: "${goal.title}"
+  * Success Probability: ${goal.probabilityRatio}%
+  * Feasibility Status: ${goal.feasibility} (Reason: ${goal.feasibilityReason || 'None'})
+  * Current Milestone: "${currentMilestone?.title || 'None'}" (${currentMilestone?.description || ''})
+  * Today's missions for this goal:
+${todaysMissions.length === 0 ? '    None' : todaysMissions.map(m => `    - [${m.isCompleted ? 'x' : ' '}] ${m.title} (${m.type}) - ${m.description || ''}`).join('\n')}`;
+    }).join('\n\n');
+
+    const systemPrompt = `You are Execut's Elite AI Coach. 
+    You are working with ${user?.firstName || 'Althaf'}. Today's date is ${todayStr}.
+    
+    Here is their live progress and goal statistics:
+    ${goalsContext || 'They have no active goals yet.'}
+    
+    CRITICAL BEHAVIORS:
+    1. Be highly direct, specific, and action-oriented. Never give generic, hand-waving advice.
+    2. Acknowledge their exact name and the specific goals, levels, or missions they are pursuing.
+    3. Refer to their actual success probabilities and pending tasks directly when discussing progress.
+    4. Keep your responses extremely punchy and concise (under 100 words).
+    5. Every single response MUST end with exactly one concrete, hyper-specific action they can take RIGHT NOW to protect their streak or boost their success probability (e.g. "Do 10 push-ups now", "Lace your shoes and walk for 5 minutes").`;
 
     const models = [
       'gemini-3.1-flash-lite-preview',

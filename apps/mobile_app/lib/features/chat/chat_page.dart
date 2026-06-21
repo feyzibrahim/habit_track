@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:ezecute/core/theme/app_colors.dart';
 import 'package:ezecute/core/api/api_service.dart';
@@ -32,8 +33,8 @@ class _AiCoachPageState extends State<AiCoachPage> {
   ];
   bool _isLoading = false;
 
-  void _sendMessage() async {
-    final text = _inputController.text.trim();
+  void _sendMessage({String? customText}) async {
+    final text = customText ?? _inputController.text.trim();
     if (text.isEmpty) return;
 
     setState(() {
@@ -42,20 +43,19 @@ class _AiCoachPageState extends State<AiCoachPage> {
       );
       _isLoading = true;
     });
-    _inputController.clear();
+    if (customText == null) {
+      _inputController.clear();
+    }
     _scrollToBottom();
 
     try {
-      // In a real scenario, this might call a different chat endpoint
-      // but for now we'll keep the terminology clean
-      await ApiService.getGoals(); // Placeholder or actual chat logic
+      final response = await ApiService.chatWithCoach(text);
 
       setState(() {
         _messages.add(
-          const ChatMessage(
+          ChatMessage(
             sender: MessageSender.ai,
-            text:
-                "I'm here to help you navigate your mission. Feel free to ask about your tasks or milestones!",
+            text: response,
           ),
         );
       });
@@ -86,6 +86,57 @@ class _AiCoachPageState extends State<AiCoachPage> {
     });
   }
 
+  Widget _buildQuickReplies() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    
+    final List<String> replies = [
+      "What should I focus on today?",
+      "Why is my probability stuck?",
+      "I missed yesterday. How do I recover?",
+      "What is my biggest risk right now?"
+    ];
+
+    return Container(
+      height: 48,
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        itemCount: replies.length,
+        itemBuilder: (context, index) {
+          final reply = replies[index];
+          return GestureDetector(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              _sendMessage(customText: reply);
+            },
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              decoration: BoxDecoration(
+                color: theme.cardTheme.color,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                ),
+              ),
+              child: Center(
+                child: Text(
+                  reply,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -112,6 +163,7 @@ class _AiCoachPageState extends State<AiCoachPage> {
                 padding: EdgeInsets.all(8.0),
                 child: CircularProgressIndicator(strokeWidth: 2),
               ),
+            _buildQuickReplies(),
             _ChatInputBar(controller: _inputController, onSend: _sendMessage),
           ],
         ),

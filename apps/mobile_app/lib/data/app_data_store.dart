@@ -95,9 +95,12 @@ class AppDataStore extends ChangeNotifier {
       currentGoals = data.map((e) => goals.Goal.fromJson(e)).toList();
 
       if (currentGoals.isNotEmpty) {
-        // Fetch full details (milestones/action items) for the active goal
-        final details = await ApiService.getGoalDetails(currentGoals.first.id);
-        currentGoals[0] = goals.Goal.fromJson(details);
+        final targetGoalId = _activeGoalId ?? currentGoals.first.id;
+        final details = await ApiService.getGoalDetails(targetGoalId);
+        final index = currentGoals.indexWhere((g) => g.id == targetGoalId);
+        if (index != -1) {
+          currentGoals[index] = goals.Goal.fromJson(details);
+        }
       }
     } catch (e) {
       debugPrint("Failed to fetch goals: $e");
@@ -109,12 +112,54 @@ class AppDataStore extends ChangeNotifier {
     }
   }
 
+  /// Deletes a goal persistently
+  Future<void> deleteGoal(String goalId) async {
+    // 1. Optimistic Update
+    currentGoals.removeWhere((g) => g.id == goalId);
+    if (_activeGoalId == goalId) {
+      _activeGoalId = currentGoals.isNotEmpty ? currentGoals.first.id : null;
+    }
+    notifyListeners();
+    _updateNativeWidget();
+
+    // 2. Persistent Backend Sync
+    try {
+      await ApiService.deleteGoal(goalId);
+      await refreshData();
+    } catch (e) {
+      debugPrint("Failed to delete goal: $e");
+      await refreshData();
+    }
+  }
+
+  /// Deletes multiple goals persistently
+  Future<void> deleteMultipleGoals(List<String> goalIds) async {
+    if (goalIds.isEmpty) return;
+
+    // 1. Optimistic Update
+    currentGoals.removeWhere((g) => goalIds.contains(g.id));
+    if (goalIds.contains(_activeGoalId)) {
+      _activeGoalId = currentGoals.isNotEmpty ? currentGoals.first.id : null;
+    }
+    notifyListeners();
+    _updateNativeWidget();
+
+    // 2. Persistent Backend Sync
+    try {
+      await Future.wait(goalIds.map((id) => ApiService.deleteGoal(id)));
+      await refreshData();
+    } catch (e) {
+      debugPrint("Failed to delete goals: $e");
+      await refreshData();
+    }
+  }
+
   /// Toggles an action item (task) within a goal
   Future<void> toggleActionItem(String actionItemId, bool currentStatus) async {
     // 1. Optimistic Update
     bool found = false;
-    if (activeGoal != null) {
-      for (var m in activeGoal!.milestones) {
+    for (var goal in currentGoals) {
+      for (var m in goal.milestones) {
         for (int i = 0; i < m.actionItems.length; i++) {
           if (m.actionItems[i].id == actionItemId) {
             final old = m.actionItems[i];
@@ -130,6 +175,7 @@ class AppDataStore extends ChangeNotifier {
         }
         if (found) break;
       }
+      if (found) break;
     }
 
     if (found) {
@@ -140,6 +186,8 @@ class AppDataStore extends ChangeNotifier {
     // 2. Persistent Backend Sync
     try {
       await ApiService.updateActionItem(actionItemId, !currentStatus);
+      await fetchGoals(skipNotify: true); // Sync latest success percentages and feasibility reasons!
+      notifyListeners();
     } catch (e) {
       debugPrint("Action item sync failed: $e");
     }
@@ -227,19 +275,44 @@ class AppDataStore extends ChangeNotifier {
     // 2. Persistent
     try {
       await ApiService.toggleTaskStep(stepId, !currentStatus);
+      await fetchGoals(skipNotify: true);
+      notifyListeners();
     } catch (e) {
       debugPrint("Step toggle failed: $e");
     }
   }
 
-  /// Aggregates tasks for the current day
+  List<goals.Milestone> get _allCurrentMilestones {
+    final List<goals.Milestone> milestones = [];
+    final now = DateTime.now();
+    final active = currentGoals.where((g) => g.status == 'active').toList();
+    for (var goal in active) {
+      goals.Milestone? current;
+      for (var m in goal.milestones) {
+        if (!m.isCompleted) {
+          current = m;
+          break;
+        }
+        if (m.targetDate != null && m.targetDate!.isAfter(now)) {
+          current = m;
+          break;
+        }
+      }
+      current ??= goal.milestones.lastOrNull;
+      if (current != null) {
+        milestones.add(current);
+      }
+    }
+    return milestones;
+  }
+
+  /// Aggregates tasks for the current day across all active goals
   List<goals.ActionItem> get todaysDailyTasks {
     final List<goals.ActionItem> tasks = [];
-    final milestone = _currentMilestone;
-    if (milestone != null) {
-      final now = DateTime.now();
-      final today = DateTime(now.year, now.month, now.day);
-      
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    
+    for (var milestone in _allCurrentMilestones) {
       for (var task in milestone.actionItems) {
         if (task.targetDate != null) {
           final target = DateTime(task.targetDate!.year, task.targetDate!.month, task.targetDate!.day);
@@ -250,25 +323,24 @@ class AppDataStore extends ChangeNotifier {
           tasks.add(task);
         }
       }
-      
-      tasks.sort((a, b) {
-        if (a.targetDate == null && b.targetDate == null) return 0;
-        if (a.targetDate == null) return 1;
-        if (b.targetDate == null) return -1;
-        return a.targetDate!.compareTo(b.targetDate!);
-      });
     }
+    
+    tasks.sort((a, b) {
+      if (a.targetDate == null && b.targetDate == null) return 0;
+      if (a.targetDate == null) return 1;
+      if (b.targetDate == null) return -1;
+      return a.targetDate!.compareTo(b.targetDate!);
+    });
     return tasks;
   }
 
-  /// Aggregates past/overdue tasks
+  /// Aggregates past/overdue tasks across all active goals
   List<goals.ActionItem> get pastDaysTasks {
     final List<goals.ActionItem> tasks = [];
-    final milestone = _currentMilestone;
-    if (milestone != null) {
-      final now = DateTime.now();
-      final today = DateTime(now.year, now.month, now.day);
-      
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    
+    for (var milestone in _allCurrentMilestones) {
       for (var task in milestone.actionItems) {
         if (task.targetDate != null) {
           final target = DateTime(task.targetDate!.year, task.targetDate!.month, task.targetDate!.day);
@@ -277,25 +349,27 @@ class AppDataStore extends ChangeNotifier {
           }
         }
       }
-      
-      tasks.sort((a, b) {
-        if (a.targetDate == null && b.targetDate == null) return 0;
-        if (a.targetDate == null) return 1;
-        if (b.targetDate == null) return -1;
-        return a.targetDate!.compareTo(b.targetDate!);
-      });
     }
+    
+    tasks.sort((a, b) {
+      if (a.isCompleted != b.isCompleted) {
+        return a.isCompleted ? 1 : -1;
+      }
+      if (a.targetDate == null && b.targetDate == null) return 0;
+      if (a.targetDate == null) return 1;
+      if (b.targetDate == null) return -1;
+      return a.targetDate!.compareTo(b.targetDate!);
+    });
     return tasks;
   }
 
-  /// Aggregates tasks scheduled for future days
+  /// Aggregates tasks scheduled for future days across all active goals
   List<goals.ActionItem> get otherDaysTasks {
     final List<goals.ActionItem> tasks = [];
-    final milestone = _currentMilestone;
-    if (milestone != null) {
-      final now = DateTime.now();
-      final today = DateTime(now.year, now.month, now.day);
-      
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    
+    for (var milestone in _allCurrentMilestones) {
       for (var task in milestone.actionItems) {
         if (task.targetDate != null) {
           final target = DateTime(task.targetDate!.year, task.targetDate!.month, task.targetDate!.day);
@@ -304,14 +378,14 @@ class AppDataStore extends ChangeNotifier {
           }
         }
       }
-      
-      tasks.sort((a, b) {
-        if (a.targetDate == null && b.targetDate == null) return 0;
-        if (a.targetDate == null) return 1;
-        if (b.targetDate == null) return -1;
-        return a.targetDate!.compareTo(b.targetDate!);
-      });
     }
+    
+    tasks.sort((a, b) {
+      if (a.targetDate == null && b.targetDate == null) return 0;
+      if (a.targetDate == null) return 1;
+      if (b.targetDate == null) return -1;
+      return a.targetDate!.compareTo(b.targetDate!);
+    });
     return tasks;
   }
 
@@ -323,6 +397,33 @@ class AppDataStore extends ChangeNotifier {
       if (m.targetDate != null && m.targetDate!.isAfter(now)) return m;
     }
     return activeGoal!.milestones.lastOrNull;
+  }
+
+  /// Returns a list of 7 booleans indicating whether each day of the current week (Mon-Sun) is "done".
+  /// A day is "done" if the user has completed at least one required mission/habit on that day.
+  List<bool> get currentWeekStreakStatus {
+    final List<bool> streak = List.filled(7, false);
+    final now = DateTime.now();
+    final currentDayOfWeek = now.weekday; // Mon is 1, Sun is 7
+    final monday = now.subtract(Duration(days: currentDayOfWeek - 1));
+    final startOfMonday = DateTime(monday.year, monday.month, monday.day);
+
+    for (int i = 0; i < 7; i++) {
+      final day = startOfMonday.add(Duration(days: i));
+      if (day.isAfter(now)) {
+        streak[i] = false;
+        continue;
+      }
+
+      final hasCompletedOnDay = xpHistory.any((event) {
+        final evDate = DateTime(event.date.year, event.date.month, event.date.day);
+        final targetDate = DateTime(day.year, day.month, day.day);
+        return evDate.isAtSameMomentAs(targetDate);
+      });
+      
+      streak[i] = hasCompletedOnDay;
+    }
+    return streak;
   }
 
   double get goalProgress {

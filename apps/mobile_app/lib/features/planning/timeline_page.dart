@@ -7,30 +7,94 @@ import 'package:intl/intl.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 class TimelinePage extends StatelessWidget {
-  const TimelinePage({super.key});
+  final Goal goal;
+
+  const TimelinePage({super.key, required this.goal});
+
+  void _confirmDelete(BuildContext context, Goal goal) {
+    showDialog(
+      context: context,
+      builder: (dialogCtx) {
+        return AlertDialog(
+          title: const Text("Delete Mission"),
+          content: Text("Are you sure you want to permanently delete \"${goal.title}\"? This will erase all milestones, daily quests, and progress history."),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogCtx),
+              child: const Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(dialogCtx); // Close dialog
+                Navigator.pop(context); // Go back to dashboard!
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text("Deleting mission \"${goal.title}\"..."),
+                    backgroundColor: Colors.amber,
+                  ),
+                );
+                try {
+                  await AppDataStore().deleteGoal(goal.id);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Mission deleted successfully"),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text("Failed to delete: $e"),
+                        backgroundColor: Colors.redAccent,
+                      ),
+                    );
+                  }
+                }
+              },
+              child: const Text("Delete", style: TextStyle(color: Colors.redAccent)),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
-      appBar: AppBar(title: const Text('Roadmap'), centerTitle: true),
+      appBar: AppBar(
+        title: const Text('Roadmap'),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(LucideIcons.trash2, color: Colors.redAccent),
+            onPressed: () => _confirmDelete(context, goal),
+          ),
+        ],
+      ),
       body: ListenableBuilder(
         listenable: AppDataStore(),
         builder: (context, child) {
           final store = AppDataStore();
-          final goal = store.activeGoal;
+          // Find reactive goal from the store
+          final activeGoal = store.currentGoals.firstWhere(
+            (g) => g.id == goal.id,
+            orElse: () => goal,
+          );
 
-          if (goal == null) {
-            return Center(
-              child: Text(
-                "No active timeline. Start a mission first.",
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                ),
-              ),
-            );
+          // Calculate progress locally
+          int totalItems = 0;
+          int completedItems = 0;
+          for (var m in activeGoal.milestones) {
+            for (var a in m.actionItems) {
+              totalItems++;
+              if (a.isCompleted) completedItems++;
+            }
           }
+          final progress = totalItems == 0 ? 0.0 : completedItems / totalItems;
 
           return RefreshIndicator(
             onRefresh: store.refreshData,
@@ -47,12 +111,12 @@ class TimelinePage extends StatelessWidget {
                         _buildMiniStat(
                           context,
                           "PHASES",
-                          goal.milestones.length.toString(),
+                          activeGoal.milestones.length.toString(),
                         ),
                         _buildMiniStat(
                           context,
                           "PROGRESS",
-                          "${(store.goalProgress * 100).toInt()}%",
+                          "${(progress * 100).toInt()}%",
                         ),
                         _buildMiniStat(
                           context,
@@ -69,20 +133,20 @@ class TimelinePage extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate((context, index) {
-                      final milestone = goal.milestones[index];
+                      final milestone = activeGoal.milestones[index];
                       // Find if this is the currently active milestone
                       final bool isCurrent =
                           !milestone.isCompleted &&
                           (index == 0 ||
-                              goal.milestones[index - 1].isCompleted);
+                              activeGoal.milestones[index - 1].isCompleted);
 
                       return _buildAdvancedTimelineItem(
                         context,
                         milestone,
-                        index == goal.milestones.length - 1,
+                        index == activeGoal.milestones.length - 1,
                         isCurrent,
                       );
-                    }, childCount: goal.milestones.length),
+                    }, childCount: activeGoal.milestones.length),
                   ),
                 ),
 

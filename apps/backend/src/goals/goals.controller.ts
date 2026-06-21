@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -103,5 +104,10 @@ export class GoalsController {
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return this.goalsService.getGoalDetails(id);
+  }
+
+  @Delete(':id')
+  async delete(@Param('id') id: string) {
+    return this.goalsService.deleteGoal(id);
   }
 }

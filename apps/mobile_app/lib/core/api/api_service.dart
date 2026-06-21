@@ -226,6 +226,19 @@ class ApiService {
     throw Exception('Failed to communicate with AI');
   }
 
+  static Future<String> chatWithCoach(String message) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/ai/chat'),
+      headers: _headers,
+      body: jsonEncode({'message': message}),
+    );
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      final data = jsonDecode(res.body);
+      return data['aiResponse']['response'] ?? 'I am focused on your mission.';
+    }
+    throw Exception('Failed to communicate with AI Coach');
+  }
+
   static Future<Map<String, dynamic>> clarifyGoal(String prompt) async {
     final res = await http.post(
       Uri.parse('$baseUrl/goals/clarify'),
@@ -325,6 +338,16 @@ class ApiService {
     );
     if (res.statusCode == 200) return jsonDecode(res.body);
     throw Exception('Failed to load goal details');
+  }
+
+  static Future<void> deleteGoal(String id) async {
+    final res = await http.delete(
+      Uri.parse('$baseUrl/goals/$id'),
+      headers: _headers,
+    );
+    if (res.statusCode != 200 && res.statusCode != 204) {
+      throw Exception('Failed to delete goal');
+    }
   }
 
   static Future<Map<String, dynamic>> updateActionItem(
