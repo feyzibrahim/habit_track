@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:ezecute/core/api/api_service.dart';
 import 'package:ezecute/core/theme/app_colors.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:ezecute/features/auth/auth_page.dart';
 
 class LeaderboardPage extends StatefulWidget {
@@ -53,12 +53,15 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
   }
 
   Widget _getRankIcon(int index, ThemeData theme) {
-    if (index == 0)
+    if (index == 0) {
       return const Icon(LucideIcons.crown, color: Color(0xFFFFD700), size: 28);
-    if (index == 1)
+    }
+    if (index == 1) {
       return const Icon(LucideIcons.medal, color: Color(0xFFC0C0C0), size: 28);
-    if (index == 2)
+    }
+    if (index == 2) {
       return const Icon(LucideIcons.medal, color: Color(0xFFCD7F32), size: 28);
+    }
     return Text(
       '#${index + 1}',
       style: theme.textTheme.titleLarge?.copyWith(

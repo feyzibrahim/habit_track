@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:ezecute/core/theme/app_colors.dart';
 import 'package:ezecute/features/friends/leaderboard_page.dart';
 import 'package:ezecute/features/home/home_page.dart';
@@ -195,18 +195,18 @@ class _AppShellState extends State<AppShell> {
         label: 'Dashboard',
         page: HomePage(),
       ),
-      NavItem(
-        icon: LucideIcons.swords,
-        label: 'Arena',
-        page: const ArenaPage(),
-      ),
+      NavItem(icon: LucideIcons.swords, label: 'Arena', page: ArenaPage()),
       NavItem(icon: LucideIcons.plus, label: 'Plan', page: PlanningPage()),
       NavItem(
         icon: LucideIcons.trophy,
         label: 'Leaderboard',
-        page: const LeaderboardPage(),
+        page: LeaderboardPage(),
       ),
-      NavItem(icon: LucideIcons.sparkles, label: 'AI Chat', page: const AiCoachPage()),
+      NavItem(
+        icon: LucideIcons.sparkles,
+        label: 'AI Chat',
+        page: AiCoachPage(),
+      ),
     ];
   }
 

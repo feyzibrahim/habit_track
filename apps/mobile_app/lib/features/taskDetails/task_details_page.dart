@@ -5,7 +5,7 @@ import 'package:confetti/confetti.dart';
 import 'package:ezecute/data/app_data_store.dart';
 import 'package:ezecute/core/models/goal_model.dart';
 import 'package:ezecute/core/theme/app_colors.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class TaskDetailsPage extends StatefulWidget {
   final ActionItem task;

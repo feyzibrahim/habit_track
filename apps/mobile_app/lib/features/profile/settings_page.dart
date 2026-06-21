@@ -90,7 +90,7 @@ class _SettingsPageState extends State<SettingsPage> {
         title: Text(title, style: theme.textTheme.bodyLarge),
         value: value,
         onChanged: _isLoading ? null : onChanged,
-        activeColor: theme.colorScheme.primary,
+        activeThumbColor: theme.colorScheme.primary,
       ),
     );
   }

@@ -14,7 +14,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -66,8 +66,10 @@ class _HomePageState extends State<HomePage> {
     final targetDay = DateTime(date.year, date.month, date.day);
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    
-    final activeGoals = store.currentGoals.where((g) => g.status == 'active').toList();
+
+    final activeGoals = store.currentGoals
+        .where((g) => g.status == 'active')
+        .toList();
     for (var goal in activeGoals) {
       goals.Milestone? current;
       for (var m in goal.milestones) {
@@ -84,7 +86,11 @@ class _HomePageState extends State<HomePage> {
       if (current != null) {
         for (var task in current.actionItems) {
           if (task.targetDate != null) {
-            final taskDate = DateTime(task.targetDate!.year, task.targetDate!.month, task.targetDate!.day);
+            final taskDate = DateTime(
+              task.targetDate!.year,
+              task.targetDate!.month,
+              task.targetDate!.day,
+            );
             if (taskDate.isAtSameMomentAs(targetDay)) {
               tasks.add(task);
             }
@@ -96,7 +102,7 @@ class _HomePageState extends State<HomePage> {
         }
       }
     }
-    
+
     tasks.sort((a, b) {
       if (a.targetDate == null && b.targetDate == null) return 0;
       if (a.targetDate == null) return 1;
@@ -246,7 +252,9 @@ class _HomePageState extends State<HomePage> {
   Widget _buildAppBar(BuildContext context, AppDataStore store) {
     final theme = Theme.of(context);
     final String name = store.userData?['firstName'] ?? 'Althaf';
-    final int pendingMissions = store.todaysDailyTasks.where((t) => !t.isCompleted).length;
+    final int pendingMissions = store.todaysDailyTasks
+        .where((t) => !t.isCompleted)
+        .length;
 
     return SliverAppBar(
       floating: true,
@@ -303,8 +311,8 @@ class _HomePageState extends State<HomePage> {
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: isDark 
-                ? [const Color(0xFF231E18), const Color(0xFF1E1A14)] 
+            colors: isDark
+                ? [const Color(0xFF231E18), const Color(0xFF1E1A14)]
                 : [const Color(0xFFFBF4EE), const Color(0xFFF5EAE0)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -348,7 +356,9 @@ class _HomePageState extends State<HomePage> {
                     Text(
                       'Next level',
                       style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.5,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -368,7 +378,9 @@ class _HomePageState extends State<HomePage> {
               child: LinearProgressIndicator(
                 value: xpProgress,
                 minHeight: 6,
-                backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+                backgroundColor: theme.colorScheme.primary.withValues(
+                  alpha: 0.1,
+                ),
                 valueColor: AlwaysStoppedAnimation(theme.colorScheme.primary),
               ),
             ),
@@ -426,7 +438,9 @@ class _HomePageState extends State<HomePage> {
 
                 if (isToday) {
                   bgColor = theme.colorScheme.primary;
-                  borderCol = isSelected ? Colors.amber : theme.colorScheme.primary;
+                  borderCol = isSelected
+                      ? Colors.amber
+                      : theme.colorScheme.primary;
                   txtColor = Colors.white;
                 } else if (isDone) {
                   bgColor = isSelected
@@ -463,14 +477,19 @@ class _HomePageState extends State<HomePage> {
                       decoration: BoxDecoration(
                         color: bgColor,
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: borderCol, width: borderWidth),
+                        border: Border.all(
+                          color: borderCol,
+                          width: borderWidth,
+                        ),
                         boxShadow: isSelected
                             ? [
                                 BoxShadow(
-                                  color: theme.colorScheme.primary.withValues(alpha: 0.15),
+                                  color: theme.colorScheme.primary.withValues(
+                                    alpha: 0.15,
+                                  ),
                                   blurRadius: 8,
                                   offset: const Offset(0, 2),
-                                )
+                                ),
                               ]
                             : null,
                       ),
@@ -506,8 +525,13 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildSuccessProbabilityCard(BuildContext context, AppDataStore store) {
-    final activeGoals = store.currentGoals.where((g) => g.status == 'active').toList();
+  Widget _buildSuccessProbabilityCard(
+    BuildContext context,
+    AppDataStore store,
+  ) {
+    final activeGoals = store.currentGoals
+        .where((g) => g.status == 'active')
+        .toList();
 
     if (activeGoals.isEmpty) return const SliverToBoxAdapter(child: SizedBox());
 
@@ -522,7 +546,9 @@ class _HomePageState extends State<HomePage> {
   Widget _buildActiveGoalsSection(BuildContext context, AppDataStore store) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final activeGoals = store.currentGoals.where((g) => g.status == 'active').toList();
+    final activeGoals = store.currentGoals
+        .where((g) => g.status == 'active')
+        .toList();
 
     if (activeGoals.isEmpty) return const SliverToBoxAdapter(child: SizedBox());
 
@@ -562,7 +588,8 @@ class _HomePageState extends State<HomePage> {
 
                   int dayCount = 1;
                   if (g.startDate != null) {
-                    dayCount = DateTime.now().difference(g.startDate!).inDays + 1;
+                    dayCount =
+                        DateTime.now().difference(g.startDate!).inDays + 1;
                     if (dayCount < 1) dayCount = 1;
                   }
 
@@ -584,7 +611,9 @@ class _HomePageState extends State<HomePage> {
                           bottom: BorderSide(
                             color: index == activeGoals.length - 1
                                 ? Colors.transparent
-                                : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                                : (isDark
+                                      ? AppColors.darkBorder
+                                      : AppColors.lightBorder),
                             width: index == activeGoals.length - 1 ? 0 : 0.5,
                           ),
                         ),
@@ -607,7 +636,9 @@ class _HomePageState extends State<HomePage> {
                                 Text(
                                   g.title,
                                   style: theme.textTheme.bodyMedium?.copyWith(
-                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                    fontWeight: isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.w500,
                                     color: theme.colorScheme.onSurface,
                                   ),
                                 ),
@@ -615,7 +646,8 @@ class _HomePageState extends State<HomePage> {
                                 Text(
                                   'Day $dayCount of ${g.durationDays} · Category: ${g.category}',
                                   style: theme.textTheme.labelSmall?.copyWith(
-                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                                    color: theme.colorScheme.onSurface
+                                        .withValues(alpha: 0.5),
                                   ),
                                 ),
                               ],
@@ -625,7 +657,11 @@ class _HomePageState extends State<HomePage> {
                             '${g.probabilityRatio}%',
                             style: theme.textTheme.labelMedium?.copyWith(
                               fontWeight: FontWeight.bold,
-                              color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                              color: isSelected
+                                  ? theme.colorScheme.primary
+                                  : theme.colorScheme.onSurface.withValues(
+                                      alpha: 0.7,
+                                    ),
                             ),
                           ),
                         ],
@@ -651,25 +687,38 @@ class _HomePageState extends State<HomePage> {
     final startOfMonday = DateTime(monday.year, monday.month, monday.day);
     final selectedDate = startOfMonday.add(Duration(days: _selectedDayIndex));
     final today = DateTime(now.year, now.month, now.day);
-    
-    final List<goals.ActionItem> dayTasks = _getTasksForDate(store, selectedDate);
+
+    final List<goals.ActionItem> dayTasks = _getTasksForDate(
+      store,
+      selectedDate,
+    );
     final isSelectedToday = selectedDate.isAtSameMomentAs(today);
-    
+
     final List<goals.ActionItem> finalTasks = List.from(dayTasks);
 
-    final List<String> dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    final List<String> dayNames = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
+    ];
     final String dayLabel = isSelectedToday
         ? "Today's Focus"
         : "${dayNames[_selectedDayIndex]}'s Focus";
 
     final totalTasks = finalTasks.length;
     final completedCount = finalTasks.where((t) => t.isCompleted).length;
-    final displayTasks = _showAllTasks ? finalTasks : finalTasks.take(3).toList();
+    final displayTasks = _showAllTasks
+        ? finalTasks
+        : finalTasks.take(3).toList();
 
     final totalBacklog = store.pastDaysTasks.length;
-    final displayBacklog = _showAllBacklog ? store.pastDaysTasks : store.pastDaysTasks.take(3).toList();
-
-
+    final displayBacklog = _showAllBacklog
+        ? store.pastDaysTasks
+        : store.pastDaysTasks.take(3).toList();
 
     return SliverToBoxAdapter(
       child: Padding(
@@ -692,15 +741,21 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
             const SizedBox(height: 10),
-            if (finalTasks.isEmpty && (!isSelectedToday || store.pastDaysTasks.isEmpty))
+            if (finalTasks.isEmpty &&
+                (!isSelectedToday || store.pastDaysTasks.isEmpty))
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 30,
+                  horizontal: 20,
+                ),
                 decoration: BoxDecoration(
                   color: theme.cardTheme.color,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                    color: isDark
+                        ? AppColors.darkBorder
+                        : AppColors.lightBorder,
                   ),
                 ),
                 child: Column(
@@ -708,13 +763,17 @@ class _HomePageState extends State<HomePage> {
                     Icon(
                       LucideIcons.sparkles,
                       size: 28,
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.25),
+                      color: theme.colorScheme.onSurface.withValues(
+                        alpha: 0.25,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     Text(
                       "No missions scheduled for this day.",
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.5,
+                        ),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -745,17 +804,24 @@ class _HomePageState extends State<HomePage> {
                           },
                           style: TextButton.styleFrom(
                             foregroundColor: theme.colorScheme.primary,
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12,
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(100),
                               side: BorderSide(
-                                color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                                color: theme.colorScheme.primary.withValues(
+                                  alpha: 0.2,
+                                ),
                                 width: 1,
                               ),
                             ),
                           ),
                           icon: Icon(
-                            _showAllTasks ? LucideIcons.chevronUp : LucideIcons.chevronDown,
+                            _showAllTasks
+                                ? LucideIcons.chevronUp
+                                : LucideIcons.chevronDown,
                             size: 16,
                           ),
                           label: Text(
@@ -795,17 +861,24 @@ class _HomePageState extends State<HomePage> {
                           },
                           style: TextButton.styleFrom(
                             foregroundColor: theme.colorScheme.primary,
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12,
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(100),
                               side: BorderSide(
-                                color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                                color: theme.colorScheme.primary.withValues(
+                                  alpha: 0.2,
+                                ),
                                 width: 1,
                               ),
                             ),
                           ),
                           icon: Icon(
-                            _showAllBacklog ? LucideIcons.chevronUp : LucideIcons.chevronDown,
+                            _showAllBacklog
+                                ? LucideIcons.chevronUp
+                                : LucideIcons.chevronDown,
                             size: 16,
                           ),
                           label: Text(
@@ -948,10 +1021,9 @@ class _HomePageState extends State<HomePage> {
                       Wrap(
                         spacing: 12,
                         runSpacing: 12,
-                        children:
-                            goal.keyChallenges
-                                .map((c) => _buildChip(context, c))
-                                .toList(),
+                        children: goal.keyChallenges
+                            .map((c) => _buildChip(context, c))
+                            .toList(),
                       ),
                       const SizedBox(height: 48),
                     ],
@@ -1100,10 +1172,9 @@ class _HomePageState extends State<HomePage> {
     ThemeData theme,
     double probability,
   ) {
-    final color =
-        probability >= 75
-            ? Colors.greenAccent
-            : (probability >= 50 ? Colors.orangeAccent : Colors.redAccent);
+    final color = probability >= 75
+        ? Colors.greenAccent
+        : (probability >= 50 ? Colors.orangeAccent : Colors.redAccent);
 
     String label;
     String description;
@@ -1139,10 +1210,9 @@ class _HomePageState extends State<HomePage> {
         ),
         borderRadius: BorderRadius.circular(32),
         border: Border.all(
-          color:
-              theme.brightness == Brightness.dark
-                  ? AppColors.darkBorder.withValues(alpha: 0.5)
-                  : AppColors.lightBorder.withValues(alpha: 0.5),
+          color: theme.brightness == Brightness.dark
+              ? AppColors.darkBorder.withValues(alpha: 0.5)
+              : AppColors.lightBorder.withValues(alpha: 0.5),
         ),
         boxShadow: [
           BoxShadow(
@@ -1240,65 +1310,64 @@ class _HomePageState extends State<HomePage> {
     List<Map<String, dynamic>> data,
   ) {
     return Column(
-      children:
-          data.map((item) {
-            final label = item['label'] ?? '';
-            final value = (item['value'] ?? 0).toDouble();
-            final fraction = (value / 100).clamp(0.0, 1.0);
+      children: data.map((item) {
+        final label = item['label'] ?? '';
+        final value = (item['value'] ?? 0).toDouble();
+        final fraction = (value / 100).clamp(0.0, 1.0);
 
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        label,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        "${value.toInt()}%",
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.primary,
-                        ),
-                      ),
-                    ],
+                  Text(
+                    label,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  const SizedBox(height: 6),
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      return Container(
-                        height: 8,
-                        width: constraints.maxWidth,
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surfaceContainerHighest,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Row(
-                          children: [
-                            AnimatedContainer(
-                              duration: const Duration(seconds: 1),
-                              curve: Curves.easeOutCubic,
-                              height: 8,
-                              width: constraints.maxWidth * fraction,
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.primary,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
+                  Text(
+                    "${value.toInt()}%",
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.primary,
+                    ),
                   ),
                 ],
               ),
-            );
-          }).toList(),
+              const SizedBox(height: 6),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  return Container(
+                    height: 8,
+                    width: constraints.maxWidth,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Row(
+                      children: [
+                        AnimatedContainer(
+                          duration: const Duration(seconds: 1),
+                          curve: Curves.easeOutCubic,
+                          height: 8,
+                          width: constraints.maxWidth * fraction,
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      }).toList(),
     );
   }
 
@@ -1348,7 +1417,9 @@ class _HomePageState extends State<HomePage> {
       ),
       child: Text(
         text,
-        style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+        style: theme.textTheme.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w500,
+        ),
       ),
     );
   }
@@ -1364,8 +1435,6 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-
-
 
   Widget _buildEmptyState(BuildContext context) {
     final theme = Theme.of(context);
@@ -1516,12 +1585,11 @@ class _GradientCircularProgressPainter extends CustomPainter {
       final sweepAngle = 2 * 3.1415926535 * (probability / 100);
 
       final progressPaint = Paint()
-        ..shader =
-            SweepGradient(
-              startAngle: -3.1415926535 / 2,
-              endAngle: 3 * 3.1415926535 / 2,
-              colors: [baseColor.withValues(alpha: 0.2), baseColor],
-            ).createShader(rect)
+        ..shader = SweepGradient(
+          startAngle: -3.1415926535 / 2,
+          endAngle: 3 * 3.1415926535 / 2,
+          colors: [baseColor.withValues(alpha: 0.2), baseColor],
+        ).createShader(rect)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 12
         ..strokeCap = StrokeCap.round;
@@ -1565,62 +1633,60 @@ class _StatItem extends StatelessWidget {
         onTap: onTap,
         child: Container(
           padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: theme.cardTheme.color,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+          decoration: BoxDecoration(
+            color: theme.cardTheme.color,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: iconColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, color: iconColor, size: 16),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(
+                    value,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 24.sp,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    unit,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                  fontSize: 10.sp,
+                ),
+              ),
+            ],
           ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: iconColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(icon, color: iconColor, size: 16),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.baseline,
-              textBaseline: TextBaseline.alphabetic,
-              children: [
-                Text(
-                  value,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 24.sp,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  unit,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                fontSize: 10.sp,
-              ),
-            ),
-          ],
-        ),
-      ),
       ),
     );
   }
 }
-
-
 
 class _SuccessProbabilitySlider extends StatefulWidget {
   final List<goals.Goal> activeGoals;
@@ -1632,7 +1698,8 @@ class _SuccessProbabilitySlider extends StatefulWidget {
   });
 
   @override
-  State<_SuccessProbabilitySlider> createState() => _SuccessProbabilitySliderState();
+  State<_SuccessProbabilitySlider> createState() =>
+      _SuccessProbabilitySliderState();
 }
 
 class _SuccessProbabilitySliderState extends State<_SuccessProbabilitySlider> {
@@ -1716,7 +1783,9 @@ class _SuccessProbabilitySliderState extends State<_SuccessProbabilitySlider> {
       return GestureDetector(
         onTap: () => widget.onTapGoal(goal),
         child: Container(
-          margin: hasMargin ? const EdgeInsets.symmetric(horizontal: 20) : EdgeInsets.zero,
+          margin: hasMargin
+              ? const EdgeInsets.symmetric(horizontal: 20)
+              : EdgeInsets.zero,
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           decoration: BoxDecoration(
             color: theme.cardTheme.color,
@@ -1739,7 +1808,9 @@ class _SuccessProbabilitySliderState extends State<_SuccessProbabilitySlider> {
                         Text(
                           'SUCCESS PROBABILITY',
                           style: theme.textTheme.labelSmall?.copyWith(
-                            color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.5,
+                            ),
                             fontWeight: FontWeight.bold,
                             letterSpacing: 1.2,
                           ),
@@ -1773,23 +1844,32 @@ class _SuccessProbabilitySliderState extends State<_SuccessProbabilitySlider> {
                 child: LinearProgressIndicator(
                   value: fraction,
                   minHeight: 6,
-                  backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+                  backgroundColor: theme.colorScheme.primary.withValues(
+                    alpha: 0.1,
+                  ),
                   valueColor: AlwaysStoppedAnimation(theme.colorScheme.primary),
                 ),
               ),
               const SizedBox(height: 10),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.primary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(10),
                   border: Border(
-                    left: BorderSide(color: theme.colorScheme.primary, width: 3),
+                    left: BorderSide(
+                      color: theme.colorScheme.primary,
+                      width: 3,
+                    ),
                   ),
                 ),
                 child: Text(
-                  goal.feasibilityReason ?? "Complete today's missions to push your probability higher.",
+                  goal.feasibilityReason ??
+                      "Complete today's missions to push your probability higher.",
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodyMedium?.copyWith(
@@ -1815,8 +1895,10 @@ class _SuccessProbabilitySliderState extends State<_SuccessProbabilitySlider> {
     }
 
     final int displayIndex = goalsCount > 0 ? _currentPage % goalsCount : 0;
-    final textScale = MediaQuery.maybeTextScalerOf(context)?.scale(1.0) ?? 
-                      MediaQuery.maybeOf(context)?.textScaleFactor ?? 1.0;
+    final textScale =
+        MediaQuery.maybeTextScalerOf(context)?.scale(1.0) ??
+        MediaQuery.maybeOf(context)?.textScaleFactor ??
+        1.0;
     final pageViewHeight = 170.h * textScale;
 
     return Container(
@@ -1898,7 +1980,7 @@ class _HomeMissionCardWidget extends StatefulWidget {
 class _HomeMissionCardWidgetState extends State<_HomeMissionCardWidget> {
   bool _isGenerating = false;
   bool _isExpanded = false;
-  List<goals.TaskStep> _visibleSteps = [];
+  final List<goals.TaskStep> _visibleSteps = [];
   bool _isStreaming = false;
   String _generatingStatus = "🧠 Reading task context...";
   Timer? _statusTimer;
@@ -1965,7 +2047,7 @@ class _HomeMissionCardWidgetState extends State<_HomeMissionCardWidget> {
             _visibleSteps.add(step);
           });
         }
-        
+
         if (mounted) {
           setState(() {
             _isStreaming = false;
@@ -1986,9 +2068,9 @@ class _HomeMissionCardWidgetState extends State<_HomeMissionCardWidget> {
           _isGenerating = false;
           _isStreaming = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error generating steps: $e")),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Error generating steps: $e")));
       }
     }
   }
@@ -1997,12 +2079,16 @@ class _HomeMissionCardWidgetState extends State<_HomeMissionCardWidget> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    
-    final bool isBoss = widget.task.type == 'boss' || widget.task.title.toLowerCase().contains('boss');
+
+    final bool isBoss =
+        widget.task.type == 'boss' ||
+        widget.task.title.toLowerCase().contains('boss');
     final bool isSide = widget.task.isOptional;
-    
-    final displaySteps = (_isStreaming || _isGenerating) ? _visibleSteps : widget.task.steps;
-    
+
+    final displaySteps = (_isStreaming || _isGenerating)
+        ? _visibleSteps
+        : widget.task.steps;
+
     Color leftStripeColor = theme.colorScheme.primary;
     Color cardBg = theme.cardTheme.color ?? theme.colorScheme.surface;
     Color borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
@@ -2023,18 +2109,15 @@ class _HomeMissionCardWidgetState extends State<_HomeMissionCardWidget> {
     }
 
     final hasSteps = widget.task.steps.isNotEmpty;
-    final allStepsDone = !hasSteps || widget.task.steps.every((s) => s.isCompleted);
+    final allStepsDone =
+        !hasSteps || widget.task.steps.every((s) => s.isCompleted);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
         color: cardBg,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: borderColor,
-          width: 1,
-          style: borderStyle,
-        ),
+        border: Border.all(color: borderColor, width: 1, style: borderStyle),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(13),
@@ -2044,7 +2127,9 @@ class _HomeMissionCardWidgetState extends State<_HomeMissionCardWidget> {
             children: [
               Container(
                 width: 4,
-                color: widget.task.isCompleted ? theme.colorScheme.primary : leftStripeColor,
+                color: widget.task.isCompleted
+                    ? theme.colorScheme.primary
+                    : leftStripeColor,
               ),
               Expanded(
                 child: Padding(
@@ -2060,7 +2145,9 @@ class _HomeMissionCardWidgetState extends State<_HomeMissionCardWidget> {
                               if (!allStepsDone && !widget.task.isCompleted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
-                                    content: Text("Complete all blueprint steps first"),
+                                    content: Text(
+                                      "Complete all blueprint steps first",
+                                    ),
                                     duration: Duration(seconds: 1),
                                   ),
                                 );
@@ -2071,19 +2158,26 @@ class _HomeMissionCardWidgetState extends State<_HomeMissionCardWidget> {
                                 final xp = isBoss ? 200 : (isSide ? 25 : 50);
                                 widget.onCompleted?.call(xp);
                               }
-                              AppDataStore().toggleActionItem(widget.task.id, widget.task.isCompleted);
+                              AppDataStore().toggleActionItem(
+                                widget.task.id,
+                                widget.task.isCompleted,
+                              );
                             },
                             child: Container(
                               width: 22,
                               height: 22,
                               margin: const EdgeInsets.only(top: 2),
                               decoration: BoxDecoration(
-                                color: widget.task.isCompleted ? theme.colorScheme.primary : Colors.transparent,
+                                color: widget.task.isCompleted
+                                    ? theme.colorScheme.primary
+                                    : Colors.transparent,
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                  color: widget.task.isCompleted 
-                                      ? theme.colorScheme.primary 
-                                      : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                                  color: widget.task.isCompleted
+                                      ? theme.colorScheme.primary
+                                      : (isDark
+                                            ? AppColors.darkBorder
+                                            : AppColors.lightBorder),
                                   width: 1.8,
                                 ),
                               ),
@@ -2102,15 +2196,23 @@ class _HomeMissionCardWidgetState extends State<_HomeMissionCardWidget> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  isBoss 
-                                      ? "BOSS CHALLENGE" 
+                                  isBoss
+                                      ? "BOSS CHALLENGE"
                                       : (isSide ? "SIDE QUEST" : "QUEST"),
                                   style: theme.textTheme.labelSmall?.copyWith(
                                     color: widget.task.isCompleted
-                                        ? theme.colorScheme.onSurface.withValues(alpha: 0.3)
+                                        ? theme.colorScheme.onSurface
+                                              .withValues(alpha: 0.3)
                                         : (isBoss
-                                            ? const Color(0xFFA78BFA)
-                                            : (isSide ? const Color(0xFFF59E0B) : theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+                                              ? const Color(0xFFA78BFA)
+                                              : (isSide
+                                                    ? const Color(0xFFF59E0B)
+                                                    : theme
+                                                          .colorScheme
+                                                          .onSurface
+                                                          .withValues(
+                                                            alpha: 0.5,
+                                                          ))),
                                     fontWeight: FontWeight.bold,
                                     fontSize: 8.5,
                                     letterSpacing: 0.8,
@@ -2122,9 +2224,12 @@ class _HomeMissionCardWidgetState extends State<_HomeMissionCardWidget> {
                                   style: theme.textTheme.bodyMedium?.copyWith(
                                     fontWeight: FontWeight.bold,
                                     color: widget.task.isCompleted
-                                        ? theme.colorScheme.onSurface.withValues(alpha: 0.3)
+                                        ? theme.colorScheme.onSurface
+                                              .withValues(alpha: 0.3)
                                         : theme.colorScheme.onSurface,
-                                    decoration: widget.task.isCompleted ? TextDecoration.lineThrough : null,
+                                    decoration: widget.task.isCompleted
+                                        ? TextDecoration.lineThrough
+                                        : null,
                                     height: 1.3,
                                   ),
                                 ),
@@ -2132,7 +2237,8 @@ class _HomeMissionCardWidgetState extends State<_HomeMissionCardWidget> {
                                 Text(
                                   widget.task.description,
                                   style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                    color: theme.colorScheme.onSurface
+                                        .withValues(alpha: 0.6),
                                     fontSize: 11,
                                     height: 1.45,
                                   ),
@@ -2141,60 +2247,104 @@ class _HomeMissionCardWidgetState extends State<_HomeMissionCardWidget> {
                                 Row(
                                   children: [
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 2,
+                                      ),
                                       decoration: BoxDecoration(
                                         color: widget.task.isCompleted
-                                            ? theme.colorScheme.primary.withValues(alpha: 0.05)
-                                            : (isBoss 
-                                                ? const Color(0xFF8B5CF6).withValues(alpha: 0.1) 
-                                                : (isSide ? const Color(0xFFF59E0B).withValues(alpha: 0.1) : theme.colorScheme.primary.withValues(alpha: 0.1))),
+                                            ? theme.colorScheme.primary
+                                                  .withValues(alpha: 0.05)
+                                            : (isBoss
+                                                  ? const Color(
+                                                      0xFF8B5CF6,
+                                                    ).withValues(alpha: 0.1)
+                                                  : (isSide
+                                                        ? const Color(
+                                                            0xFFF59E0B,
+                                                          ).withValues(
+                                                            alpha: 0.1,
+                                                          )
+                                                        : theme
+                                                              .colorScheme
+                                                              .primary
+                                                              .withValues(
+                                                                alpha: 0.1,
+                                                              ))),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Text(
                                         isBoss
                                             ? "+200 XP"
                                             : (isSide ? "+25 XP" : "+50 XP"),
-                                        style: theme.textTheme.labelSmall?.copyWith(
-                                          color: widget.task.isCompleted
-                                              ? theme.colorScheme.primary.withValues(alpha: 0.3)
-                                              : (isBoss
-                                                  ? const Color(0xFFA78BFA)
-                                                  : (isSide ? const Color(0xFFF59E0B) : theme.colorScheme.primary)),
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 9,
-                                        ),
+                                        style: theme.textTheme.labelSmall
+                                            ?.copyWith(
+                                              color: widget.task.isCompleted
+                                                  ? theme.colorScheme.primary
+                                                        .withValues(alpha: 0.3)
+                                                  : (isBoss
+                                                        ? const Color(
+                                                            0xFFA78BFA,
+                                                          )
+                                                        : (isSide
+                                                              ? const Color(
+                                                                  0xFFF59E0B,
+                                                                )
+                                                              : theme
+                                                                    .colorScheme
+                                                                    .primary)),
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 9,
+                                            ),
                                       ),
                                     ),
                                     if (widget.task.totalTarget > 1) ...[
                                       const SizedBox(width: 8),
                                       Text(
                                         "Target: ${widget.task.totalTarget}",
-                                        style: theme.textTheme.labelSmall?.copyWith(
-                                          color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-                                          fontSize: 9,
-                                        ),
+                                        style: theme.textTheme.labelSmall
+                                            ?.copyWith(
+                                              color: theme.colorScheme.onSurface
+                                                  .withValues(alpha: 0.4),
+                                              fontSize: 9,
+                                            ),
                                       ),
                                     ],
-                                    if (widget.showDate && widget.task.targetDate != null) ...[
+                                    if (widget.showDate &&
+                                        widget.task.targetDate != null) ...[
                                       const SizedBox(width: 8),
                                       Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 2,
+                                        ),
                                         decoration: BoxDecoration(
-                                          color: Colors.red.withValues(alpha: 0.1),
-                                          borderRadius: BorderRadius.circular(12),
+                                          color: Colors.red.withValues(
+                                            alpha: 0.1,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
                                         ),
                                         child: Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            const Icon(LucideIcons.calendar, size: 10, color: Colors.redAccent),
+                                            const Icon(
+                                              LucideIcons.calendar,
+                                              size: 10,
+                                              color: Colors.redAccent,
+                                            ),
                                             const SizedBox(width: 4),
                                             Text(
-                                              DateFormat('MMM d').format(widget.task.targetDate!),
-                                              style: theme.textTheme.labelSmall?.copyWith(
-                                                color: Colors.redAccent,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 9,
-                                              ),
+                                              DateFormat(
+                                                'MMM d',
+                                              ).format(widget.task.targetDate!),
+                                              style: theme.textTheme.labelSmall
+                                                  ?.copyWith(
+                                                    color: Colors.redAccent,
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 9,
+                                                  ),
                                             ),
                                           ],
                                         ),
@@ -2207,7 +2357,8 @@ class _HomeMissionCardWidgetState extends State<_HomeMissionCardWidget> {
                                         setState(() {
                                           _isExpanded = !_isExpanded;
                                         });
-                                        if (_isExpanded && widget.task.steps.isEmpty) {
+                                        if (_isExpanded &&
+                                            widget.task.steps.isEmpty) {
                                           _generateSteps();
                                         }
                                       },
@@ -2215,16 +2366,22 @@ class _HomeMissionCardWidgetState extends State<_HomeMissionCardWidget> {
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           Text(
-                                            _isExpanded ? "Collapse" : "Blueprint",
-                                            style: theme.textTheme.labelSmall?.copyWith(
-                                              color: theme.colorScheme.primary,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 9.5,
-                                            ),
+                                            _isExpanded
+                                                ? "Collapse"
+                                                : "Blueprint",
+                                            style: theme.textTheme.labelSmall
+                                                ?.copyWith(
+                                                  color:
+                                                      theme.colorScheme.primary,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 9.5,
+                                                ),
                                           ),
                                           const SizedBox(width: 2),
                                           Icon(
-                                            _isExpanded ? LucideIcons.chevronUp : LucideIcons.chevronDown,
+                                            _isExpanded
+                                                ? LucideIcons.chevronUp
+                                                : LucideIcons.chevronDown,
                                             size: 11,
                                             color: theme.colorScheme.primary,
                                           ),
@@ -2245,7 +2402,9 @@ class _HomeMissionCardWidgetState extends State<_HomeMissionCardWidget> {
                         Text(
                           "AI EXECUTION BLUEPRINT",
                           style: theme.textTheme.labelSmall?.copyWith(
-                            color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.4,
+                            ),
                             fontWeight: FontWeight.bold,
                             fontSize: 8,
                             letterSpacing: 0.5,
@@ -2258,10 +2417,18 @@ class _HomeMissionCardWidgetState extends State<_HomeMissionCardWidget> {
                             child: Row(
                               children: [
                                 const SizedBox(
-                                  width: 14,
-                                  height: 14,
-                                  child: CircularProgressIndicator(strokeWidth: 1.5, color: Colors.deepPurpleAccent),
-                                ).animate(onPlay: (controller) => controller.repeat()).rotate(duration: 1.seconds),
+                                      width: 14,
+                                      height: 14,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 1.5,
+                                        color: Colors.deepPurpleAccent,
+                                      ),
+                                    )
+                                    .animate(
+                                      onPlay: (controller) =>
+                                          controller.repeat(),
+                                    )
+                                    .rotate(duration: 1.seconds),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Text(
@@ -2278,47 +2445,71 @@ class _HomeMissionCardWidgetState extends State<_HomeMissionCardWidget> {
                           ),
                           ...List.generate(3, (index) {
                             return Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8.0),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    width: 14,
-                                    height: 14,
-                                    decoration: BoxDecoration(
-                                      color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
-                                      shape: BoxShape.circle,
-                                    ),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 8.0,
                                   ),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: Container(
-                                      height: 12,
-                                      decoration: BoxDecoration(
-                                        color: theme.colorScheme.onSurface.withValues(alpha: 0.08),
-                                        borderRadius: BorderRadius.circular(6),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 14,
+                                        height: 14,
+                                        decoration: BoxDecoration(
+                                          color: theme.colorScheme.onSurface
+                                              .withValues(alpha: 0.1),
+                                          shape: BoxShape.circle,
+                                        ),
                                       ),
-                                    ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Container(
+                                          height: 12,
+                                          decoration: BoxDecoration(
+                                            color: theme.colorScheme.onSurface
+                                                .withValues(alpha: 0.08),
+                                            borderRadius: BorderRadius.circular(
+                                              6,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                            )
-                            .animate(onPlay: (controller) => controller.repeat(reverse: true))
-                            .fade(begin: 0.3, end: 0.8, duration: 800.ms, delay: (index * 200).ms);
+                                )
+                                .animate(
+                                  onPlay: (controller) =>
+                                      controller.repeat(reverse: true),
+                                )
+                                .fade(
+                                  begin: 0.3,
+                                  end: 0.8,
+                                  duration: 800.ms,
+                                  delay: (index * 200).ms,
+                                );
                           }),
-                        ]
-                        else if (widget.task.steps.isEmpty && !_isStreaming)
+                        ] else if (widget.task.steps.isEmpty && !_isStreaming)
                           GestureDetector(
                             onTap: _generateSteps,
                             child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 8,
+                                horizontal: 12,
+                              ),
                               decoration: BoxDecoration(
-                                border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.3)),
+                                border: Border.all(
+                                  color: theme.colorScheme.primary.withValues(
+                                    alpha: 0.3,
+                                  ),
+                                ),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(LucideIcons.sparkles, size: 12, color: theme.colorScheme.primary),
+                                  Icon(
+                                    LucideIcons.sparkles,
+                                    size: 12,
+                                    color: theme.colorScheme.primary,
+                                  ),
                                   const SizedBox(width: 6),
                                   Text(
                                     "Generate AI Action Steps",
@@ -2335,67 +2526,107 @@ class _HomeMissionCardWidgetState extends State<_HomeMissionCardWidget> {
                           Column(
                             children: displaySteps.map((step) {
                               return InkWell(
-                                onTap: () {
-                                  HapticFeedback.selectionClick();
-                                  if (!step.isCompleted) {
-                                    widget.onCompleted?.call(5);
-                                  }
-                                  AppDataStore().toggleTaskStep(widget.task.id, step.id, step.isCompleted);
-                                },
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 6.0),
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        step.isCompleted ? LucideIcons.checkCircle2 : LucideIcons.circle,
-                                        size: 14,
-                                        color: step.isCompleted
-                                            ? theme.colorScheme.primary
-                                            : theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                                    onTap: () {
+                                      HapticFeedback.selectionClick();
+                                      if (!step.isCompleted) {
+                                        widget.onCompleted?.call(5);
+                                      }
+                                      AppDataStore().toggleTaskStep(
+                                        widget.task.id,
+                                        step.id,
+                                        step.isCompleted,
+                                      );
+                                    },
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 6.0,
                                       ),
-                                      const SizedBox(width: 10),
-                                      Expanded(
-                                        child: Text(
-                                          step.text,
-                                          style: theme.textTheme.bodySmall?.copyWith(
-                                            fontSize: 11,
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            step.isCompleted
+                                                ? LucideIcons.checkCircle2
+                                                : LucideIcons.circle,
+                                            size: 14,
                                             color: step.isCompleted
-                                                ? theme.colorScheme.onSurface.withValues(alpha: 0.4)
-                                                : theme.colorScheme.onSurface.withValues(alpha: 0.7),
-                                            decoration: step.isCompleted ? TextDecoration.lineThrough : null,
-                                            height: 1.35,
+                                                ? theme.colorScheme.primary
+                                                : theme.colorScheme.onSurface
+                                                      .withValues(alpha: 0.3),
                                           ),
-                                        ),
+                                          const SizedBox(width: 10),
+                                          Expanded(
+                                            child: Text(
+                                              step.text,
+                                              style: theme.textTheme.bodySmall
+                                                  ?.copyWith(
+                                                    fontSize: 11,
+                                                    color: step.isCompleted
+                                                        ? theme
+                                                              .colorScheme
+                                                              .onSurface
+                                                              .withValues(
+                                                                alpha: 0.4,
+                                                              )
+                                                        : theme
+                                                              .colorScheme
+                                                              .onSurface
+                                                              .withValues(
+                                                                alpha: 0.7,
+                                                              ),
+                                                    decoration: step.isCompleted
+                                                        ? TextDecoration
+                                                              .lineThrough
+                                                        : null,
+                                                    height: 1.35,
+                                                  ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                    ],
-                                  ),
-                                ),
-                              )
-                              .animate()
-                              .fadeIn(duration: 300.ms, curve: Curves.easeOut)
-                              .slideY(begin: 0.1, end: 0, duration: 300.ms, curve: Curves.easeOutBack);
+                                    ),
+                                  )
+                                  .animate()
+                                  .fadeIn(
+                                    duration: 300.ms,
+                                    curve: Curves.easeOut,
+                                  )
+                                  .slideY(
+                                    begin: 0.1,
+                                    end: 0,
+                                    duration: 300.ms,
+                                    curve: Curves.easeOutBack,
+                                  );
                             }).toList(),
                           ),
                           if (_isStreaming) ...[
                             const SizedBox(height: 8),
                             Row(
-                              children: [
-                                const SizedBox(
-                                  width: 8,
-                                  height: 8,
-                                  child: CircularProgressIndicator(strokeWidth: 1.0, color: Colors.deepPurpleAccent),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  "Streaming steps...",
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.primary,
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ).animate(onPlay: (controller) => controller.repeat(reverse: true)).fade(begin: 0.5, end: 1.0, duration: 500.ms),
+                                  children: [
+                                    const SizedBox(
+                                      width: 8,
+                                      height: 8,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 1.0,
+                                        color: Colors.deepPurpleAccent,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      "Streaming steps...",
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                            color: theme.colorScheme.primary,
+                                            fontSize: 9,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                    ),
+                                  ],
+                                )
+                                .animate(
+                                  onPlay: (controller) =>
+                                      controller.repeat(reverse: true),
+                                )
+                                .fade(begin: 0.5, end: 1.0, duration: 500.ms),
                           ],
                         ],
                       ],

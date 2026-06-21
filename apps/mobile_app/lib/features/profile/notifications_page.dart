@@ -88,7 +88,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
         ),
         value: value,
         onChanged: _isLoading ? null : onChanged,
-        activeColor: theme.colorScheme.primary,
+        activeThumbColor: theme.colorScheme.primary,
       ),
     );
   }

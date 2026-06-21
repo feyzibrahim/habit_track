@@ -4,7 +4,7 @@ import 'package:ezecute/data/app_data_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class TimelinePage extends StatelessWidget {
   final Goal goal;
@@ -17,7 +17,9 @@ class TimelinePage extends StatelessWidget {
       builder: (dialogCtx) {
         return AlertDialog(
           title: const Text("Delete Mission"),
-          content: Text("Are you sure you want to permanently delete \"${goal.title}\"? This will erase all milestones, daily quests, and progress history."),
+          content: Text(
+            "Are you sure you want to permanently delete \"${goal.title}\"? This will erase all milestones, daily quests, and progress history.",
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogCtx),
@@ -54,7 +56,10 @@ class TimelinePage extends StatelessWidget {
                   }
                 }
               },
-              child: const Text("Delete", style: TextStyle(color: Colors.redAccent)),
+              child: const Text(
+                "Delete",
+                style: TextStyle(color: Colors.redAccent),
+              ),
             ),
           ],
         );
@@ -327,8 +332,9 @@ class TimelinePage extends StatelessWidget {
                               List<ActionItem>.from(milestone.actionItems)
                                 ..sort((a, b) {
                                   if (a.targetDate == null &&
-                                      b.targetDate == null)
+                                      b.targetDate == null) {
                                     return 0;
+                                  }
                                   if (a.targetDate == null) return 1;
                                   if (b.targetDate == null) return -1;
                                   return a.targetDate!.compareTo(b.targetDate!);

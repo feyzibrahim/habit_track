@@ -262,9 +262,9 @@ class ApiService {
       headers: _headers,
       body: jsonEncode({
         'prompt': prompt,
-        if (durationDays != null) 'durationDays': durationDays,
-        if (answers != null) 'answers': answers,
-        if (startDate != null) 'startDate': startDate,
+        'durationDays': ?durationDays,
+        'answers': ?answers,
+        'startDate': ?startDate,
       }),
     );
     if (res.statusCode == 201 || res.statusCode == 200) {
@@ -286,11 +286,11 @@ class ApiService {
       headers: _headers,
       body: jsonEncode({
         'prompt': prompt,
-        if (durationDays != null) 'durationDays': durationDays,
-        if (answers != null) 'answers': answers,
-        if (previousPlan != null) 'previousPlan': previousPlan,
-        if (refinementPrompt != null) 'refinementPrompt': refinementPrompt,
-        if (startDate != null) 'startDate': startDate,
+        'durationDays': ?durationDays,
+        'answers': ?answers,
+        'previousPlan': ?previousPlan,
+        'refinementPrompt': ?refinementPrompt,
+        'startDate': ?startDate,
       }),
     );
     if (res.statusCode == 201 || res.statusCode == 200) {
@@ -316,7 +316,7 @@ class ApiService {
         'durationDays': (durationDays != null) ? durationDays : null,
         'category': (category != null) ? category : null,
         'feasibility': (feasibility != null) ? feasibility : null,
-        if (startDate != null) 'startDate': startDate,
+        'startDate': ?startDate,
       }),
     );
     if (res.statusCode == 201 || res.statusCode == 200) {
@@ -374,7 +374,9 @@ class ApiService {
     throw Exception('Failed to generate steps');
   }
 
-  static Future<Map<String, dynamic>> generateTasksForMilestone(String id) async {
+  static Future<Map<String, dynamic>> generateTasksForMilestone(
+    String id,
+  ) async {
     final res = await http.post(
       Uri.parse('$baseUrl/goals/milestones/$id/generate-tasks'),
       headers: _headers,
