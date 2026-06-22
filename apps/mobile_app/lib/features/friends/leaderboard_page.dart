@@ -21,37 +21,262 @@ class LeaderboardPage extends StatefulWidget {
 }
 
 class _LeaderboardPageState extends State<LeaderboardPage> {
-  List<dynamic> _leaderboard = [];
-  bool _isLoading = true;
-  String _selectedTab = 'global';
+  final Map<String, List<dynamic>> _tabData = {
+    'friends': [],
+    'global': [],
+    'alltime': [],
+  };
+  final Map<String, bool> _tabLoading = {
+    'friends': true,
+    'global': false,
+    'alltime': false,
+  };
+  final Map<String, bool> _tabLoaded = {
+    'friends': false,
+    'global': false,
+    'alltime': false,
+  };
+  String _selectedTab = 'friends';
 
   @override
   void initState() {
     super.initState();
-    _fetchLeaderboard();
+    _fetchTab('friends');
   }
 
-  Future<void> _fetchLeaderboard() async {
-    if (ApiService.isGuest) return;
-    setState(() => _isLoading = true);
-    try {
-      final data = await ApiService.getLeaderboard();
+  List<dynamic> _filterEntries(List<dynamic> entries) {
+    return entries
+        .where((u) => u['isGuest'] != true && u['email'] != null)
+        .toList();
+  }
+
+  Future<void> _fetchTab(String tab, {bool force = false}) async {
+    if (ApiService.isGuest) {
       if (mounted) {
         setState(() {
-          _leaderboard = data
-              .where((u) => u['isGuest'] != true && u['email'] != null)
-              .toList();
-          _isLoading = false;
+          _tabLoading[tab] = false;
+        });
+      }
+      return;
+    }
+    if (_tabLoaded[tab] == true && !force) return;
+
+    setState(() => _tabLoading[tab] = true);
+    try {
+      final data = await ApiService.getLeaderboard(type: tab);
+      if (mounted) {
+        setState(() {
+          _tabData[tab] = _filterEntries(data);
+          _tabLoading[tab] = false;
+          _tabLoaded[tab] = true;
         });
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() => _tabLoading[tab] = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to fetch leaderboard: $e')),
         );
       }
     }
+  }
+
+  void _onTabSelected(String tab) {
+    setState(() => _selectedTab = tab);
+    if (_tabLoaded[tab] != true && _tabLoading[tab] != true) {
+      _fetchTab(tab);
+    }
+  }
+
+  List<dynamic> get _activeList => _tabData[_selectedTab] ?? [];
+
+  bool get _isCurrentTabLoading => _tabLoading[_selectedTab] == true;
+
+  PreferredSizeWidget _buildAppBar(ThemeData theme) {
+    return AppBar(
+      leading: IconButton(
+        icon: const Icon(LucideIcons.arrowLeft),
+        onPressed: () => Navigator.pop(context),
+      ),
+      title: const Text(
+        'Leaderboard',
+        style: TextStyle(fontFamily: 'Syne', fontWeight: FontWeight.bold),
+      ),
+      centerTitle: true,
+      elevation: 0,
+      backgroundColor: Colors.transparent,
+      actions: [
+        IconButton(
+          icon: const Icon(LucideIcons.refreshCcw, size: 18),
+          onPressed: _isCurrentTabLoading
+              ? null
+              : () => _fetchTab(_selectedTab, force: true),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSkeletonBox({
+    required ThemeData theme,
+    required bool isDark,
+    double? width,
+    double height = 16,
+    double radius = 8,
+  }) {
+    final baseColor = isDark
+        ? AppColors.darkBorder.withValues(alpha: 0.35)
+        : const Color(0xFFE2E8F0);
+    final shimmerColor = isDark
+        ? Colors.white.withValues(alpha: 0.08)
+        : Colors.white.withValues(alpha: 0.7);
+
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: baseColor,
+        borderRadius: BorderRadius.circular(radius),
+      ),
+    )
+        .animate(onPlay: (controller) => controller.repeat())
+        .shimmer(duration: 1200.ms, color: shimmerColor);
+  }
+
+  Widget _buildSkeletonLoading(ThemeData theme, bool isDark) {
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Compete on consistency, not just outcome',
+            style: TextStyle(
+              fontSize: 12,
+              color: isDark ? Colors.white60 : Colors.black54,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: EdgeInsets.all(16.r),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? AppColors.darkBorder.withValues(alpha: 0.2)
+                  : const Color(0xFFF1F5F9),
+              borderRadius: BorderRadius.circular(16.r),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildSkeletonBox(theme: theme, isDark: isDark, width: 140, height: 20),
+                const SizedBox(height: 10),
+                _buildSkeletonBox(theme: theme, isDark: isDark, width: 180, height: 12),
+                const SizedBox(height: 18),
+                Row(
+                  children: [
+                    _buildSkeletonBox(theme: theme, isDark: isDark, width: 72, height: 40, radius: 10),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildSkeletonBox(theme: theme, isDark: isDark, width: 120, height: 10),
+                          const SizedBox(height: 8),
+                          _buildSkeletonBox(theme: theme, isDark: isDark, height: 12),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          _buildTabs(theme),
+          const SizedBox(height: 8),
+          SizedBox(
+            height: 160.h,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      _buildSkeletonBox(theme: theme, isDark: isDark, width: 44, height: 44, radius: 22),
+                      const SizedBox(height: 8),
+                      _buildSkeletonBox(theme: theme, isDark: isDark, width: 48, height: 10),
+                      const SizedBox(height: 8),
+                      _buildSkeletonBox(theme: theme, isDark: isDark, height: 40.h, radius: 6),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      _buildSkeletonBox(theme: theme, isDark: isDark, width: 56, height: 56, radius: 28),
+                      const SizedBox(height: 8),
+                      _buildSkeletonBox(theme: theme, isDark: isDark, width: 52, height: 10),
+                      const SizedBox(height: 8),
+                      _buildSkeletonBox(theme: theme, isDark: isDark, height: 60.h, radius: 6),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      _buildSkeletonBox(theme: theme, isDark: isDark, width: 40, height: 40, radius: 20),
+                      const SizedBox(height: 8),
+                      _buildSkeletonBox(theme: theme, isDark: isDark, width: 44, height: 10),
+                      const SizedBox(height: 8),
+                      _buildSkeletonBox(theme: theme, isDark: isDark, height: 28.h, radius: 6),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          ...List.generate(
+            5,
+            (index) => Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: theme.cardTheme.color,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                  width: 0.5,
+                ),
+              ),
+              child: Row(
+                children: [
+                  _buildSkeletonBox(theme: theme, isDark: isDark, width: 20, height: 14),
+                  const SizedBox(width: 12),
+                  _buildSkeletonBox(theme: theme, isDark: isDark, width: 36, height: 36, radius: 18),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSkeletonBox(theme: theme, isDark: isDark, width: 120, height: 12),
+                        const SizedBox(height: 8),
+                        _buildSkeletonBox(theme: theme, isDark: isDark, height: 10),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  _buildSkeletonBox(theme: theme, isDark: isDark, width: 48, height: 12),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
 
@@ -334,7 +559,7 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
                   ),
                 );
                 if (result == true) {
-                  _fetchLeaderboard();
+                  _fetchTab('friends', force: true);
                 }
               },
               style: ElevatedButton.styleFrom(
@@ -357,16 +582,24 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
     );
   }
 
-  List<dynamic> get _globalLeaderboard {
-    return _leaderboard;
-  }
-
-  List<dynamic> get _allTimeLeaderboard {
-    return _leaderboard;
-  }
-
   Widget _buildHeroCard(List<dynamic> currentList, int yourIndex, ThemeData theme, bool isDark) {
     final rankText = yourIndex != -1 ? "#${yourIndex + 1}" : "#--";
+
+    final title = switch (_selectedTab) {
+      'friends' => 'Friends Rankings',
+      'alltime' => 'All Time Rankings',
+      _ => 'Global Rankings',
+    };
+    final subtitle = switch (_selectedTab) {
+      'friends' => 'This week among your friends',
+      'alltime' => 'Total XP earned',
+      _ => 'This week globally — updated daily',
+    };
+    final rankLabel = switch (_selectedTab) {
+      'friends' => 'YOUR RANK AMONG FRIENDS',
+      'alltime' => 'YOUR ALL-TIME RANK',
+      _ => 'YOUR RANK THIS WEEK',
+    };
     
     String behindText = "";
     if (currentList.isNotEmpty && yourIndex > 0) {
@@ -398,9 +631,9 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Global Rankings',
-            style: TextStyle(
+          Text(
+            title,
+            style: const TextStyle(
               fontFamily: 'Syne',
               fontSize: 20,
               fontWeight: FontWeight.w800,
@@ -410,7 +643,7 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
           ),
           const SizedBox(height: 4),
           Text(
-            'Week of May 12 — updated daily',
+            subtitle,
             style: TextStyle(
               fontSize: 12.sp,
               color: isDark ? Colors.white60 : Colors.black45,
@@ -435,7 +668,7 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'YOUR RANK THIS WEEK',
+                      rankLabel,
                       style: TextStyle(
                         fontFamily: 'DM Mono',
                         fontSize: 10.sp,
@@ -467,11 +700,7 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
       final isActive = _selectedTab == value;
       return Expanded(
         child: GestureDetector(
-          onTap: () {
-            setState(() {
-              _selectedTab = value;
-            });
-          },
+          onTap: () => _onTabSelected(value),
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 7),
             decoration: BoxDecoration(
@@ -503,9 +732,9 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
       margin: const EdgeInsets.only(bottom: 14),
       child: Row(
         children: [
-          tabItem('Global', 'global'),
-          const SizedBox(width: 6),
           tabItem('Friends', 'friends'),
+          const SizedBox(width: 6),
+          tabItem('Global', 'global'),
           const SizedBox(width: 6),
           tabItem('All Time', 'alltime'),
         ],
@@ -525,71 +754,86 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
       final displayName = name.isNotEmpty ? name : (user['email']?.toString() ?? 'Unknown');
       final avatarLetter = displayName.isNotEmpty ? displayName[0].toUpperCase() : '?';
       final xp = user['score'];
+      final isYou = user['isYou'] == true || user['email'] == AppDataStore().userData?['email'];
+      final rankColor = place == 1
+          ? const Color(0xFFFFD700)
+          : place == 2
+              ? const Color(0xFFC0C0C0)
+              : const Color(0xFFCD7F32);
 
       return Expanded(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Text(medal, style: const TextStyle(fontSize: 16)),
-            const SizedBox(height: 2),
-            Container(
-              width: avatarSize,
-              height: avatarSize,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: badgeColor,
-                  width: 2,
+        child: GestureDetector(
+          onTap: () => _showFriendDetails(
+            context,
+            user,
+            rankColor,
+            isYou ? "You" : displayName,
+          ),
+          behavior: HitTestBehavior.opaque,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Text(medal, style: const TextStyle(fontSize: 16)),
+              const SizedBox(height: 2),
+              Container(
+                width: avatarSize,
+                height: avatarSize,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: badgeColor,
+                    width: 2,
+                  ),
+                  gradient: place == 1
+                      ? const LinearGradient(
+                          colors: [Color(0xFF1D9E75), Color(0xFF0A5A3F)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        )
+                      : null,
+                  color: place != 1 ? (isDark ? AppColors.darkBorder.withValues(alpha: 0.5) : const Color(0xFFE2E8F0)) : null,
                 ),
-                gradient: place == 1
-                    ? const LinearGradient(
-                        colors: [Color(0xFF1D9E75), Color(0xFF0A5A3F)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      )
-                    : null,
-                color: place != 1 ? (isDark ? AppColors.darkBorder.withValues(alpha: 0.5) : const Color(0xFFE2E8F0)) : null,
-              ),
-              child: Center(
-                child: Text(
-                  avatarLetter,
-                  style: TextStyle(
-                    fontFamily: 'Syne',
-                    fontWeight: FontWeight.w800,
-                    fontSize: fontSize,
-                    color: Colors.white,
+                child: Center(
+                  child: Text(
+                    avatarLetter,
+                    style: TextStyle(
+                      fontFamily: 'Syne',
+                      fontWeight: FontWeight.w800,
+                      fontSize: fontSize,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 6),
-            Container(
-              height: barHeight.h,
-              width: 55.w,
-              decoration: BoxDecoration(
-                color: barColor,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
+              const SizedBox(height: 6),
+              Text(
+                isYou ? "You" : displayName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
               ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              displayName,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              "$xp XP",
-              style: theme.textTheme.labelSmall?.copyWith(
-                fontFamily: 'DM Mono',
-                fontSize: 10,
-                color: place == 1
-                    ? theme.colorScheme.primary
-                    : (isDark ? Colors.white60 : Colors.black54),
+              const SizedBox(height: 2),
+              Text(
+                "$xp XP",
+                style: theme.textTheme.labelSmall?.copyWith(
+                  fontFamily: 'DM Mono',
+                  fontSize: 10,
+                  color: place == 1
+                      ? theme.colorScheme.primary
+                      : (isDark ? Colors.white60 : Colors.black54),
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 6),
+              Container(
+                height: barHeight.h,
+                width: 55.w,
+                decoration: BoxDecoration(
+                  color: barColor,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -1268,99 +1512,58 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
 
     if (ApiService.isGuest) {
       return Scaffold(
-        appBar: AppBar(
-          title: const Text(
-            'Leaderboard',
-            style: TextStyle(fontFamily: 'Syne', fontWeight: FontWeight.bold),
-          ),
-          centerTitle: true,
-          elevation: 0,
-          backgroundColor: Colors.transparent,
-        ),
+        appBar: _buildAppBar(theme),
         body: _buildGuestState(context, theme, isDark),
       );
     }
 
-    List<dynamic> activeList = [];
-    if (_selectedTab == 'global') {
-      activeList = _globalLeaderboard;
-    } else if (_selectedTab == 'friends') {
-      activeList = _leaderboard;
-    } else {
-      activeList = _allTimeLeaderboard;
-    }
-
+    final activeList = _activeList;
     final myEmail = AppDataStore().userData?['email'];
     final myIndex = activeList.indexWhere((u) => u['email'] == myEmail);
 
     return Scaffold(
-      body: SafeArea(
-        child: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : RefreshIndicator(
-                onRefresh: _fetchLeaderboard,
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(
-                    parent: AlwaysScrollableScrollPhysics(),
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Leaderboard',
-                                style: TextStyle(
-                                  fontFamily: 'Syne',
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: -0.3,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Compete on consistency, not just outcome',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: isDark ? Colors.white60 : Colors.black54,
-                                ),
-                              ),
-                            ],
-                          ),
-                          IconButton(
-                            icon: const Icon(LucideIcons.refreshCcw, size: 18),
-                            onPressed: _fetchLeaderboard,
-                          ),
-                        ],
+      appBar: _buildAppBar(theme),
+      body: _isCurrentTabLoading
+          ? _buildSkeletonLoading(theme, isDark)
+          : RefreshIndicator(
+              onRefresh: () => _fetchTab(_selectedTab, force: true),
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(
+                  parent: AlwaysScrollableScrollPhysics(),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'Compete on consistency, not just outcome',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDark ? Colors.white60 : Colors.black54,
                       ),
-                      const SizedBox(height: 16),
-                      _buildHeroCard(activeList, myIndex, theme, isDark),
-                      _buildTabs(theme),
-                      if (_selectedTab == 'friends' && activeList.isEmpty)
-                        _buildEmptyFriendsState(theme, isDark)
-                      else ...[
-                        if (activeList.length >= 3)
-                          _buildPodium(activeList, isDark, theme),
-                        ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: activeList.length,
-                          itemBuilder: (context, index) {
-                            return _buildLeaderboardRow(activeList[index], index, isDark, theme);
-                          },
-                        ),
-                        _buildShareButton(myIndex, myIndex != -1 ? activeList[myIndex] : null),
-                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    _buildHeroCard(activeList, myIndex, theme, isDark),
+                    _buildTabs(theme),
+                    if (_selectedTab == 'friends' && activeList.isEmpty)
+                      _buildEmptyFriendsState(theme, isDark)
+                    else ...[
+                      if (activeList.length >= 3)
+                        _buildPodium(activeList, isDark, theme),
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: activeList.length,
+                        itemBuilder: (context, index) {
+                          return _buildLeaderboardRow(activeList[index], index, isDark, theme);
+                        },
+                      ),
+                      _buildShareButton(myIndex, myIndex != -1 ? activeList[myIndex] : null),
                     ],
-                  ),
+                  ],
                 ),
               ),
-      ),
+            ),
     );
   }
 }

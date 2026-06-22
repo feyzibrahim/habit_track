@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Param, Request, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, Request, UseGuards, Query, BadRequestException } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { FriendsService } from './friends.service';
 
@@ -33,7 +33,19 @@ export class FriendsController {
   }
 
   @Get('leaderboard')
-  async getLeaderboard(@Request() req) {
-    return this.friendsService.getLeaderboard(req.user.id);
+  async getLeaderboard(
+    @Request() req,
+    @Query('type') type: string = 'friends',
+  ) {
+    const validTypes = ['friends', 'global', 'alltime'];
+    if (!validTypes.includes(type)) {
+      throw new BadRequestException(
+        'Invalid leaderboard type. Use friends, global, or alltime.',
+      );
+    }
+    return this.friendsService.getLeaderboard(
+      req.user.id,
+      type as 'friends' | 'global' | 'alltime',
+    );
   }
 }
