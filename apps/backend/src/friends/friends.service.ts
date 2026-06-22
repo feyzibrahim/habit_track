@@ -261,90 +261,72 @@ export class FriendsService {
   async getLeaderboard(
     userId: string,
     type: 'friends' | 'global' | 'alltime',
+    page: number = 1,
+    limit: number = 20,
   ) {
-    const friends = await this.getFriends(userId);
-    const friendIds = new Set(friends.map(f => f.id));
-    friendIds.add(userId);
-
+    const offset = (page - 1) * limit;
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
     const usersRepo = this.usersService['usersRepository'] as Repository<User>;
 
-    let targetUsers: User[];
-
-    if (type === 'friends') {
-      targetUsers = await usersRepo.find({
-        where: [...friendIds].map(id => ({ id })),
-        select: ['id', 'email', 'firstName', 'lastName', 'isGuest'],
-      });
-    } else {
-      targetUsers = await usersRepo.find({
-        select: ['id', 'email', 'firstName', 'lastName', 'isGuest'],
-      });
-    }
-
-    const validUsers = targetUsers.filter(
-      u => (!u.isGuest || u.id === userId) && u.email !== null,
-    );
-    const validUserIds = validUsers.map(u => u.id);
-
-    const goalsByUserId = await this.loadGoalSummariesByUserId(validUserIds);
+    let scoreSelect: string;
+    let parameters: any = { userId };
 
     if (type === 'alltime') {
-      const alltimeRows = await this.xpEventRepository
-        .createQueryBuilder('xp')
-        .select('xp.userId', 'userId')
-        .addSelect('SUM(xp.xp)', 'score')
-        .where(validUserIds.length > 0 ? 'xp.userId IN (:...validUserIds)' : '1=0', {
-          validUserIds,
-        })
-        .groupBy('xp.userId')
-        .getRawMany<{ userId: string; score: string }>();
-
-      const alltimeScores = new Map(
-        alltimeRows.map(row => [row.userId, Number(row.score) || 0]),
-      );
-
-      const legacyUserIds = validUsers
-        .filter(user => (alltimeScores.get(user.id) ?? 0) === 0)
-        .map(user => user.id);
-      const legacyScores = await this.loadLegacyScores(legacyUserIds);
-
-      return validUsers
-        .map(user => {
-          let score = alltimeScores.get(user.id) ?? 0;
-          if (score === 0) {
-            score = legacyScores.get(user.id) ?? 0;
-          }
-          return this.mapUserEntry(user, score, goalsByUserId.get(user.id) ?? []);
-        })
-        .sort((a, b) => b.score - a.score);
+      scoreSelect = `(
+        COALESCE((SELECT SUM(xp.xp) FROM xp_event xp WHERE xp."userId" = user.id), 0) +
+        COALESCE((
+          SELECT SUM(CASE WHEN ai."isCompleted" = true THEN 10 ELSE 0 END) + SUM(CASE WHEN ai.type = 'habit' THEN ai."completedCount" * 2 ELSE 0 END)
+          FROM goal g
+          LEFT JOIN milestone m ON m."goalId" = g.id
+          LEFT JOIN action_item ai ON ai."milestoneId" = m.id
+          WHERE g."userId" = "user"."id"
+        ), 0)
+      )`;
+    } else {
+      parameters.sevenDaysAgo = sevenDaysAgo;
+      scoreSelect = `COALESCE((
+        SELECT SUM(xp.xp)
+        FROM xp_event xp
+        WHERE xp."userId" = user.id AND xp."createdAt" >= :sevenDaysAgo
+      ), 0)`;
     }
 
-    const weeklyRows = await this.xpEventRepository
-      .createQueryBuilder('xp')
-      .select('xp.userId', 'userId')
-      .addSelect('SUM(xp.xp)', 'score')
-      .where('xp.createdAt >= :sevenDaysAgo', { sevenDaysAgo })
-      .andWhere(validUserIds.length > 0 ? 'xp.userId IN (:...validUserIds)' : '1=0', {
-        validUserIds,
-      })
-      .groupBy('xp.userId')
-      .getRawMany<{ userId: string; score: string }>();
+    const query = usersRepo.createQueryBuilder('user')
+      .select([
+        'user.id AS id',
+        'user.email AS email',
+        'user.firstName AS "firstName"',
+        'user.lastName AS "lastName"',
+        'user.isGuest AS "isGuest"'
+      ])
+      .addSelect(scoreSelect, 'score')
+      .where('((user.isGuest = false OR user.id = :userId) AND user.email IS NOT NULL)', { userId })
+      .orderBy('score', 'DESC')
+      .limit(limit)
+      .offset(offset);
 
-    const weeklyScores = new Map(
-      weeklyRows.map(row => [row.userId, Number(row.score) || 0]),
-    );
+    if (type === 'friends') {
+      const friends = await this.getFriends(userId);
+      const friendIds = new Set(friends.map(f => f.id));
+      friendIds.add(userId);
+      query.andWhere('user.id IN (:...friendIds)', { friendIds: [...friendIds] });
+    }
 
-    return validUsers
-      .map(user =>
-        this.mapUserEntry(
-          user,
-          weeklyScores.get(user.id) ?? 0,
-          goalsByUserId.get(user.id) ?? [],
-        ),
-      )
-      .sort((a, b) => b.score - a.score);
+    const rawResults = await query.setParameters(parameters).getRawMany();
+    const resultUserIds = rawResults.map(r => r.id);
+    const goalsByUserId = await this.loadGoalSummariesByUserId(resultUserIds);
+
+    return rawResults.map(row => {
+      const user = new User();
+      user.id = row.id;
+      user.email = row.email;
+      user.firstName = row.firstName;
+      user.lastName = row.lastName;
+      user.isGuest = row.isGuest;
+      const score = Number(row.score) || 0;
+      return this.mapUserEntry(user, score, goalsByUserId.get(user.id) ?? []);
+    });
   }
 }

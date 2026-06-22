@@ -9,7 +9,7 @@ class AppColors {
   static const Color lightTextSecondary = Color(0xFF777777);
   static const Color lightBorder        = Color(0xFFE5E5E5);
   static const Color lightAccent        = Color(0xFF1D9E75); // Emerald Green
-  static const Color lightSecondary     = Color(0xFFD4850A); // Amber
+  static const Color lightSecondary     = Color(0xFF436B59); // Muted Green
   static const Color lightTertiary      = Color(0xFF7C6FCD); // Purple
   static const Color lightError         = Color(0xFFC94040); // Red
 
@@ -24,7 +24,7 @@ class AppColors {
   static const Color darkBorder         = Color(0xFF1E1E1E);
   static const Color darkBorder2        = Color(0xFF2A2A2A);
   static const Color darkAccent         = Color(0xFF1D9E75); // Emerald Green
-  static const Color darkSecondary       = Color(0xFFD4850A); // Amber
+  static const Color darkSecondary       = Color(0xFF5A8F76); // Muted Green
   static const Color darkTertiary       = Color(0xFF7C6FCD); // Purple
   static const Color darkError          = Color(0xFFC94040); // Red
 
@@ -36,7 +36,7 @@ class AppColors {
   // Dim Accents for Dark Mode Card Layouts
   static const Color greenDim           = Color(0xFF0A2A1E);
   static const Color greenMid           = Color(0xFF0F5A3F);
-  static const Color amberDim           = Color(0xFF2A1A00);
+  static const Color secondaryDim       = Color(0xFF11241C);
   static const Color purpleDim          = Color(0xFF1A1530);
   static const Color redDim             = Color(0xFF2A0F0F);
 }

@@ -1050,7 +1050,7 @@ class _MissionCardWidgetState extends State<_MissionCardWidget> {
                                             : (isBoss
                                                   ? (isDark ? AppColors.purpleDim : AppColors.lightTertiary.withValues(alpha: 0.1))
                                                   : (isSide
-                                                        ? (isDark ? AppColors.amberDim : AppColors.lightSecondary.withValues(alpha: 0.1))
+                                                         ? (isDark ? AppColors.secondaryDim : AppColors.lightSecondary.withValues(alpha: 0.1))
                                                         : theme
                                                               .colorScheme
                                                               .primary

@@ -36,12 +36,41 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
     'global': false,
     'alltime': false,
   };
+  final Map<String, int> _tabPages = {
+    'friends': 1,
+    'global': 1,
+    'alltime': 1,
+  };
+  final Map<String, bool> _tabHasMore = {
+    'friends': true,
+    'global': true,
+    'alltime': true,
+  };
+  final Map<String, bool> _tabLoadingMore = {
+    'friends': false,
+    'global': false,
+    'alltime': false,
+  };
   String _selectedTab = 'friends';
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     _fetchTab('friends');
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+      _loadMore(_selectedTab);
+    }
   }
 
   List<dynamic> _filterEntries(List<dynamic> entries) {
@@ -61,14 +90,22 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
     }
     if (_tabLoaded[tab] == true && !force) return;
 
-    setState(() => _tabLoading[tab] = true);
+    setState(() {
+      _tabLoading[tab] = true;
+      _tabPages[tab] = 1;
+      _tabHasMore[tab] = true;
+    });
     try {
-      final data = await ApiService.getLeaderboard(type: tab);
+      final data = await ApiService.getLeaderboard(type: tab, page: 1, limit: 20);
+      final filtered = _filterEntries(data);
       if (mounted) {
         setState(() {
-          _tabData[tab] = _filterEntries(data);
+          _tabData[tab] = filtered;
           _tabLoading[tab] = false;
           _tabLoaded[tab] = true;
+          if (filtered.length < 20) {
+            _tabHasMore[tab] = false;
+          }
         });
       }
     } catch (e) {
@@ -76,6 +113,34 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
         setState(() => _tabLoading[tab] = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to fetch leaderboard: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _loadMore(String tab) async {
+    if (ApiService.isGuest || _tabLoadingMore[tab] == true || _tabHasMore[tab] == false) return;
+
+    setState(() => _tabLoadingMore[tab] = true);
+    final nextPage = (_tabPages[tab] ?? 1) + 1;
+    try {
+      final data = await ApiService.getLeaderboard(type: tab, page: nextPage, limit: 20);
+      final filtered = _filterEntries(data);
+      if (mounted) {
+        setState(() {
+          _tabData[tab]!.addAll(filtered);
+          _tabPages[tab] = nextPage;
+          _tabLoadingMore[tab] = false;
+          if (filtered.length < 20) {
+            _tabHasMore[tab] = false;
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _tabLoadingMore[tab] = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load more leaderboard items: $e')),
         );
       }
     }
@@ -194,49 +259,49 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
           const SizedBox(height: 16),
           _buildTabs(theme),
           const SizedBox(height: 8),
-          SizedBox(
-            height: 160.h,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      _buildSkeletonBox(theme: theme, isDark: isDark, width: 44, height: 44, radius: 22),
-                      const SizedBox(height: 8),
-                      _buildSkeletonBox(theme: theme, isDark: isDark, width: 48, height: 10),
-                      const SizedBox(height: 8),
-                      _buildSkeletonBox(theme: theme, isDark: isDark, height: 40.h, radius: 6),
-                    ],
-                  ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    _buildSkeletonBox(theme: theme, isDark: isDark, width: 44, height: 44, radius: 22),
+                    const SizedBox(height: 8),
+                    _buildSkeletonBox(theme: theme, isDark: isDark, width: 48, height: 10),
+                    const SizedBox(height: 8),
+                    _buildSkeletonBox(theme: theme, isDark: isDark, width: 55.w, height: 40.h, radius: 6),
+                  ],
                 ),
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      _buildSkeletonBox(theme: theme, isDark: isDark, width: 56, height: 56, radius: 28),
-                      const SizedBox(height: 8),
-                      _buildSkeletonBox(theme: theme, isDark: isDark, width: 52, height: 10),
-                      const SizedBox(height: 8),
-                      _buildSkeletonBox(theme: theme, isDark: isDark, height: 60.h, radius: 6),
-                    ],
-                  ),
+              ),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    _buildSkeletonBox(theme: theme, isDark: isDark, width: 56, height: 56, radius: 28),
+                    const SizedBox(height: 8),
+                    _buildSkeletonBox(theme: theme, isDark: isDark, width: 52, height: 10),
+                    const SizedBox(height: 8),
+                    _buildSkeletonBox(theme: theme, isDark: isDark, width: 55.w, height: 60.h, radius: 6),
+                  ],
                 ),
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      _buildSkeletonBox(theme: theme, isDark: isDark, width: 40, height: 40, radius: 20),
-                      const SizedBox(height: 8),
-                      _buildSkeletonBox(theme: theme, isDark: isDark, width: 44, height: 10),
-                      const SizedBox(height: 8),
-                      _buildSkeletonBox(theme: theme, isDark: isDark, height: 28.h, radius: 6),
-                    ],
-                  ),
+              ),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    _buildSkeletonBox(theme: theme, isDark: isDark, width: 40, height: 40, radius: 20),
+                    const SizedBox(height: 8),
+                    _buildSkeletonBox(theme: theme, isDark: isDark, width: 44, height: 10),
+                    const SizedBox(height: 8),
+                    _buildSkeletonBox(theme: theme, isDark: isDark, width: 55.w, height: 28.h, radius: 6),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
           const SizedBox(height: 20),
           ...List.generate(
@@ -771,6 +836,7 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
           ),
           behavior: HitTestBehavior.opaque,
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               Text(medal, style: const TextStyle(fontSize: 16)),
@@ -839,7 +905,6 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
     }
 
     return Container(
-      height: 160.h,
       padding: const EdgeInsets.symmetric(horizontal: 10),
       margin: const EdgeInsets.only(bottom: 20),
       child: Row(
@@ -1528,6 +1593,7 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
           : RefreshIndicator(
               onRefresh: () => _fetchTab(_selectedTab, force: true),
               child: SingleChildScrollView(
+                controller: _scrollController,
                 physics: const BouncingScrollPhysics(
                   parent: AlwaysScrollableScrollPhysics(),
                 ),
@@ -1558,6 +1624,11 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
                           return _buildLeaderboardRow(activeList[index], index, isDark, theme);
                         },
                       ),
+                      if (_tabLoadingMore[_selectedTab] == true)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          child: Center(child: CircularProgressIndicator()),
+                        ),
                       _buildShareButton(myIndex, myIndex != -1 ? activeList[myIndex] : null),
                     ],
                   ],

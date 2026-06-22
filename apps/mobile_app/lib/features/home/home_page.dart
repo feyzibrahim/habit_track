@@ -25,11 +25,14 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late ConfettiController _confettiController;
+  late ScrollController _dayScrollController;
   bool _showXpAnimation = false;
   int _xpGained = 0;
-  int _selectedDayIndex = DateTime.now().weekday - 1;
+  DateTime _selectedDate = DateUtils.dateOnly(DateTime.now());
   bool _showAllTasks = false;
   bool _showAllBacklog = false;
+  bool _scrolledAway = false;
+  bool _isScrollingToToday = false;
 
   @override
   void initState() {
@@ -37,12 +40,89 @@ class _HomePageState extends State<HomePage> {
     _confettiController = ConfettiController(
       duration: const Duration(seconds: 2),
     );
+    _dayScrollController = ScrollController();
+    _dayScrollController.addListener(_onDayScroll);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollToToday(animate: false);
+    });
   }
 
   @override
   void dispose() {
     _confettiController.dispose();
+    _dayScrollController.removeListener(_onDayScroll);
+    _dayScrollController.dispose();
     super.dispose();
+  }
+
+  void _onDayScroll() {
+    if (_isScrollingToToday) return;
+    if (!_dayScrollController.hasClients) return;
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double itemWidth = 56.w; // width: 48.w + margin horizontal 4
+    const double todayIndex = 30.0;
+    final double todayOffset = (todayIndex * itemWidth) - (screenWidth / 2) + (itemWidth / 2);
+    final double diff = (_dayScrollController.offset - todayOffset).abs();
+    final bool isAway = diff > (itemWidth * 1.5);
+    if (isAway != _scrolledAway) {
+      setState(() {
+        _scrolledAway = isAway;
+      });
+    }
+  }
+
+  bool _isScrollOutsideCurrentWeek() {
+    if (!_dayScrollController.hasClients) return false;
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double itemWidth = 56.w;
+    const double todayIndex = 30.0;
+    final double todayOffset = (todayIndex * itemWidth) - (screenWidth / 2) + (itemWidth / 2);
+    final double diff = (_dayScrollController.offset - todayOffset).abs();
+    return diff > (itemWidth * 3.5); // More than 3.5 days scroll distance is outside the current week
+  }
+
+  void _scrollToToday({bool animate = true}) {
+    if (!_dayScrollController.hasClients) return;
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double itemWidth = 56.w; // width: 48.w + margin horizontal 4
+    const double todayIndex = 30.0;
+    final double targetOffset = ((todayIndex * itemWidth) - (screenWidth / 2) + (itemWidth / 2))
+        .clamp(0.0, _dayScrollController.position.maxScrollExtent);
+
+    if (animate) {
+      setState(() {
+        _isScrollingToToday = true;
+      });
+      _dayScrollController.animateTo(
+        targetOffset,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeOutCubic,
+      ).then((_) {
+        setState(() {
+          _isScrollingToToday = false;
+        });
+      });
+    } else {
+      _dayScrollController.jumpTo(targetOffset);
+    }
+  }
+
+  bool _isDateInCurrentWeek(DateTime date) {
+    final now = DateTime.now();
+    final currentDayOfWeek = now.weekday; // Mon is 1, Sun is 7
+    final monday = now.subtract(Duration(days: currentDayOfWeek - 1));
+    final startOfMonday = DateTime(monday.year, monday.month, monday.day);
+    final sunday = startOfMonday.add(const Duration(days: 6));
+    final normalizedDate = DateTime(date.year, date.month, date.day);
+    return !normalizedDate.isBefore(startOfMonday) && !normalizedDate.isAfter(sunday);
+  }
+
+  bool _isDayCompleted(AppDataStore store, DateTime day) {
+    final normalizedDay = DateTime(day.year, day.month, day.day);
+    return store.xpHistory.any((event) {
+      final evDate = DateTime(event.date.year, event.date.month, event.date.day);
+      return evDate.isAtSameMomentAs(normalizedDay);
+    });
   }
 
   void _triggerXpAnimation(int xp) {
@@ -413,9 +493,13 @@ class _HomePageState extends State<HomePage> {
   Widget _buildStreakWeek(BuildContext context, AppDataStore store) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final streakStatus = store.currentWeekStreakStatus;
-    final weekdays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-    final todayIndex = DateTime.now().weekday - 1; // 0-indexed
+    final now = DateUtils.dateOnly(DateTime.now());
+    final today = DateUtils.dateOnly(DateTime.now());
+
+    final isSelectedInCurrentWeek = _isDateInCurrentWeek(_selectedDate);
+    final String titleText = isSelectedInCurrentWeek
+        ? "This Week's Streak"
+        : "${DateFormat('MMM d').format(_selectedDate.subtract(Duration(days: _selectedDate.weekday - 1)))} - ${DateFormat('MMM d, yyyy').format(_selectedDate.add(Duration(days: 7 - _selectedDate.weekday)))}";
 
     return SliverToBoxAdapter(
       child: Padding(
@@ -423,102 +507,195 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildSectionTitle(context, "This Week's Streak"),
-            const SizedBox(height: 12),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: List.generate(7, (i) {
-                final isDone = streakStatus[i];
-                final isToday = i == todayIndex;
-                final isSelected = i == _selectedDayIndex;
-
-                Color bgColor;
-                Color borderCol;
-                Color txtColor;
-                double borderWidth = isSelected ? 2.5 : 1.5;
-
-                if (isToday) {
-                  bgColor = theme.colorScheme.primary;
-                  borderCol = isSelected
-                      ? Colors.amber
-                      : theme.colorScheme.primary;
-                  txtColor = Colors.white;
-                } else if (isDone) {
-                  bgColor = isSelected
-                      ? theme.colorScheme.primary.withValues(alpha: 0.25)
-                      : theme.colorScheme.primary.withValues(alpha: 0.15);
-                  borderCol = isSelected
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.primary.withValues(alpha: 0.4);
-                  txtColor = theme.colorScheme.primary;
-                } else {
-                  bgColor = isSelected
-                      ? theme.colorScheme.primary.withValues(alpha: 0.05)
-                      : (theme.cardTheme.color ?? Colors.transparent);
-                  borderCol = isSelected
-                      ? theme.colorScheme.primary
-                      : (isDark ? AppColors.darkBorder : AppColors.lightBorder);
-                  txtColor = isSelected
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.onSurface.withValues(alpha: 0.3);
-                }
-
-                return Expanded(
-                  child: GestureDetector(
-                    onTap: () {
-                      HapticFeedback.lightImpact();
-                      setState(() {
-                        _selectedDayIndex = i;
-                        _showAllTasks = false;
-                      });
-                    },
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 4),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      decoration: BoxDecoration(
-                        color: bgColor,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: borderCol,
-                          width: borderWidth,
+              children: [
+                _buildSectionTitle(context, titleText),
+                AnimatedOpacity(
+                  opacity: _scrolledAway ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 200),
+                  child: IgnorePointer(
+                    ignoring: !_scrolledAway,
+                    child: GestureDetector(
+                      onTap: () {
+                        HapticFeedback.mediumImpact();
+                        setState(() {
+                          _selectedDate = DateUtils.dateOnly(DateTime.now());
+                          _showAllTasks = false;
+                          _scrolledAway = false;
+                        });
+                        _scrollToToday();
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                            width: 0.5,
+                          ),
                         ),
-                        boxShadow: isSelected
-                            ? [
-                                BoxShadow(
-                                  color: theme.colorScheme.primary.withValues(
-                                    alpha: 0.15,
-                                  ),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ]
-                            : null,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              LucideIcons.calendarDays,
+                              size: 11,
+                              color: theme.colorScheme.primary,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              _isScrollOutsideCurrentWeek() ? "Back to This Week" : "Today",
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: theme.colorScheme.primary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 9.5,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 80.h,
+              child: ListView.builder(
+                controller: _dayScrollController,
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                itemCount: 61,
+                itemBuilder: (context, index) {
+                  final date = today.add(Duration(days: index - 30));
+                  final isToday = DateUtils.isSameDay(date, now);
+                  final isSelected = DateUtils.isSameDay(date, _selectedDate);
+                  final isDone = _isDayCompleted(store, date);
+                  final isCurrentWeek = _isDateInCurrentWeek(date);
+
+                  Color bgColor;
+                  Color borderCol;
+                  Color txtColor;
+                  Color dotColor;
+                  double borderWidth = isSelected ? 2.2 : 1.0;
+
+                  if (isToday) {
+                    bgColor = isSelected ? theme.colorScheme.primary : theme.colorScheme.primary.withValues(alpha: 0.15);
+                    borderCol = theme.colorScheme.primary;
+                    txtColor = isSelected ? Colors.white : theme.colorScheme.primary;
+                    dotColor = isSelected ? Colors.white : theme.colorScheme.primary;
+                  } else if (isCurrentWeek) {
+                    bgColor = isSelected
+                        ? theme.colorScheme.primary.withValues(alpha: 0.25)
+                        : (isDone ? theme.colorScheme.primary.withValues(alpha: 0.12) : theme.colorScheme.primary.withValues(alpha: 0.04));
+                    borderCol = isSelected
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.primary.withValues(alpha: 0.35);
+                    txtColor = isSelected
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.primary.withValues(alpha: 0.85);
+                    dotColor = isDone ? theme.colorScheme.primary : Colors.transparent;
+                  } else {
+                    bgColor = isSelected
+                        ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                        : (isDone ? theme.colorScheme.primary.withValues(alpha: 0.06) : Colors.transparent);
+                    borderCol = isSelected
+                        ? theme.colorScheme.primary
+                        : (isDark ? AppColors.darkBorder : AppColors.lightBorder);
+                    txtColor = isSelected
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.45);
+                    dotColor = isDone ? theme.colorScheme.primary.withValues(alpha: 0.5) : Colors.transparent;
+                  }
+
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: GestureDetector(
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        setState(() {
+                          _selectedDate = date;
+                          _showAllTasks = false;
+                        });
+                      },
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(
-                            weekdays[i],
-                            style: theme.textTheme.labelMedium?.copyWith(
-                              color: txtColor,
-                              fontWeight: FontWeight.bold,
+                          Container(
+                            width: 24.w,
+                            height: 3.h,
+                            margin: const EdgeInsets.only(bottom: 6),
+                            decoration: BoxDecoration(
+                              color: isCurrentWeek
+                                  ? theme.colorScheme.primary.withValues(alpha: 0.7)
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(1.5.r),
                             ),
                           ),
-                          const SizedBox(height: 6),
                           Container(
-                            width: 6,
-                            height: 6,
+                            width: 48.w,
+                            height: 60.h,
                             decoration: BoxDecoration(
-                              color: txtColor,
-                              shape: BoxShape.circle,
+                              color: bgColor,
+                              borderRadius: BorderRadius.circular(10.r),
+                              border: Border.all(
+                                color: borderCol,
+                                width: borderWidth,
+                              ),
+                              boxShadow: isSelected
+                                  ? [
+                                      BoxShadow(
+                                        color: theme.colorScheme.primary.withValues(
+                                          alpha: 0.15,
+                                        ),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
+                                      )
+                                    ]
+                                  : null,
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  DateFormat('E').format(date)[0],
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: txtColor.withValues(alpha: 0.7),
+                                    fontSize: 9.sp,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 3),
+                                Text(
+                                  date.day.toString(),
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: txtColor,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14.sp,
+                                    height: 1.1,
+                                  ),
+                                ),
+                                const SizedBox(height: 3),
+                                Container(
+                                  width: 5.r,
+                                  height: 5.r,
+                                  decoration: BoxDecoration(
+                                    color: dotColor,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
                     ),
-                  ),
-                );
-              }),
+                  );
+                },
+              ),
             ),
           ],
         ),
@@ -683,32 +860,20 @@ class _HomePageState extends State<HomePage> {
     final isDark = theme.brightness == Brightness.dark;
 
     final now = DateTime.now();
-    final currentDayOfWeek = now.weekday; // Mon is 1, Sun is 7
-    final monday = now.subtract(Duration(days: currentDayOfWeek - 1));
-    final startOfMonday = DateTime(monday.year, monday.month, monday.day);
-    final selectedDate = startOfMonday.add(Duration(days: _selectedDayIndex));
-    final today = DateTime(now.year, now.month, now.day);
+    final today = DateUtils.dateOnly(now);
+    final selectedDate = _selectedDate;
 
     final List<goals.ActionItem> dayTasks = _getTasksForDate(
       store,
       selectedDate,
     );
-    final isSelectedToday = selectedDate.isAtSameMomentAs(today);
+    final isSelectedToday = DateUtils.isSameDay(selectedDate, today);
 
     final List<goals.ActionItem> finalTasks = List.from(dayTasks);
 
-    final List<String> dayNames = [
-      'Monday',
-      'Tuesday',
-      'Wednesday',
-      'Thursday',
-      'Friday',
-      'Saturday',
-      'Sunday',
-    ];
     final String dayLabel = isSelectedToday
         ? "Today's Focus"
-        : "${dayNames[_selectedDayIndex]}'s Focus";
+        : "${DateFormat('EEEE').format(selectedDate)}'s Focus";
 
     final totalTasks = finalTasks.length;
     final completedCount = finalTasks.where((t) => t.isCompleted).length;
@@ -2260,7 +2425,7 @@ class _HomeMissionCardWidgetState extends State<_HomeMissionCardWidget> {
                                             : (isBoss
                                                   ? (isDark ? AppColors.purpleDim : AppColors.lightTertiary.withValues(alpha: 0.1))
                                                   : (isSide
-                                                        ? (isDark ? AppColors.amberDim : AppColors.lightSecondary.withValues(alpha: 0.1))
+                                                        ? (isDark ? AppColors.secondaryDim : AppColors.lightSecondary.withValues(alpha: 0.1))
                                                         : theme
                                                               .colorScheme
                                                               .primary

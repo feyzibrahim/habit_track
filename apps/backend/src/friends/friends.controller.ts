@@ -36,6 +36,8 @@ export class FriendsController {
   async getLeaderboard(
     @Request() req,
     @Query('type') type: string = 'friends',
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '20',
   ) {
     const validTypes = ['friends', 'global', 'alltime'];
     if (!validTypes.includes(type)) {
@@ -43,9 +45,13 @@ export class FriendsController {
         'Invalid leaderboard type. Use friends, global, or alltime.',
       );
     }
+    const pageNum = parseInt(page, 10) || 1;
+    const limitNum = parseInt(limit, 10) || 20;
     return this.friendsService.getLeaderboard(
       req.user.id,
       type as 'friends' | 'global' | 'alltime',
+      pageNum,
+      limitNum,
     );
   }
 }

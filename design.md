@@ -23,13 +23,13 @@ The design prioritizes a high-contrast, premium tech aesthetic with a pitch-blac
 | **Muted Text / Border** | `#3A3A3A` | Very dark gray for deeply secondary indicators and background text. |
 | **Border / Divider** | `#1E1E1E` | Subtle separations between screens and components. |
 | **Primary Accent (Green)** | `#1D9E75` | Emerald green for primary actions, success status, level completion, and active navigation. |
-| **Secondary Accent (Amber)** | `#D4850A` | Warm gold/amber for side quests and pending actions. |
+| **Secondary Accent (Muted Green)** | `#5A8F76` | Muted green for side quests and secondary actions. |
 | **Tertiary Accent (Purple)** | `#7C6FCD` | Violet purple for Boss Challenges. |
 | **Error / Destructive (Red)** | `#C94040` | Crimson red for destructive actions and warning statuses. |
 
 #### Accompanying Dim/Mid Colors (for Dark Mode card backgrounds & borders):
 - **Green Dim / Mid:** `#0A2A1E` / `#0F5A3F` (Used for completed/positive card backgrounds and glows)
-- **Amber Dim:** `#2A1A00` (Used for side quest card status highlights)
+- **Muted Green Dim:** `#11241C` (Used for side quest card status highlights)
 - **Purple Dim:** `#1A1530` (Used for boss challenge card styling)
 - **Red Dim:** `#2A0F0F` (Used for failure risk cards)
 
@@ -47,7 +47,7 @@ The design prioritizes a high-contrast, premium tech aesthetic with a pitch-blac
 | **Secondary Text** | `#777777` | Muted cool gray. |
 | **Border / Divider** | `#E5E5E5` | Clean, subtle borders. |
 | **Primary Accent (Green)** | `#1D9E75` | Emerald green for active actions and main buttons. |
-| **Secondary Accent (Amber)** | `#D4850A` | Gold/Amber for warning/pending actions. |
+| **Secondary Accent (Muted Green)** | `#436B59` | Muted green for side quests and secondary actions. |
 | **Tertiary Accent (Purple)** | `#7C6FCD` | Violet purple for special items. |
 | **Error / Destructive** | `#C94040` | Clean red for errors. |
 

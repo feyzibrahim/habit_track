@@ -472,9 +472,13 @@ class ApiService {
     throw Exception('Failed to load friend requests');
   }
 
-  static Future<List<dynamic>> getLeaderboard({String type = 'friends'}) async {
+  static Future<List<dynamic>> getLeaderboard({
+    String type = 'friends',
+    int page = 1,
+    int limit = 20,
+  }) async {
     final res = await http.get(
-      Uri.parse('$baseUrl/friends/leaderboard?type=$type'),
+      Uri.parse('$baseUrl/friends/leaderboard?type=$type&page=$page&limit=$limit'),
       headers: _headers,
     );
     if (res.statusCode == 200) return jsonDecode(res.body) as List<dynamic>;
