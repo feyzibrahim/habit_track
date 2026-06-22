@@ -592,6 +592,7 @@ class _ArenaPageState extends State<ArenaPage> {
   // --- BOSS TAB ---
   Widget _buildBossTab(BuildContext context, AppDataStore store) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final combined = [
       ...store.pastDaysTasks,
       ...store.todaysDailyTasks,
@@ -612,16 +613,21 @@ class _ArenaPageState extends State<ArenaPage> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF140D26), Color(0xFF0F0B1E)],
+              gradient: LinearGradient(
+                colors: isDark
+                    ? [const Color(0xFF0E0C18), const Color(0xFF141028)]
+                    : [const Color(0xFFF3F0FA), const Color(0xFFEBE6F7)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFF3B2F60), width: 1),
+              border: Border.all(
+                color: isDark ? const Color(0xFF3A3060) : AppColors.lightTertiary.withValues(alpha: 0.3),
+                width: 0.5,
+              ),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
+                  color: (isDark ? AppColors.darkTertiary : AppColors.lightTertiary).withValues(alpha: 0.1),
                   blurRadius: 10,
                   spreadRadius: 2,
                 ),
@@ -637,7 +643,7 @@ class _ArenaPageState extends State<ArenaPage> {
                     Text(
                       "BOSS CHALLENGES",
                       style: theme.textTheme.labelMedium?.copyWith(
-                        color: const Color(0xFFA78BFA),
+                        color: isDark ? AppColors.darkTertiary : AppColors.lightTertiary,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 1.0,
                       ),
@@ -872,19 +878,17 @@ class _MissionCardWidgetState extends State<_MissionCardWidget> {
     BorderStyle borderStyle = BorderStyle.solid;
 
     if (isBoss) {
-      leftStripeColor = const Color(0xFF8B5CF6); // Purple
-      cardBg = isDark ? const Color(0xFF0F0B1E) : const Color(0xFFF5F3FF);
-      borderColor = const Color(0xFF8B5CF6).withValues(alpha: 0.3);
+      leftStripeColor = isDark ? AppColors.darkTertiary : AppColors.lightTertiary;
+      cardBg = isDark ? AppColors.purpleDim : const Color(0xFFF5F2FC);
+      borderColor = (isDark ? AppColors.darkTertiary : AppColors.lightTertiary).withValues(alpha: 0.3);
     } else if (isSide) {
-      leftStripeColor = const Color(0xFFF59E0B); // Amber
-      borderStyle =
-          BorderStyle.solid; // In Flutter we'll use normal border but styled
-      borderColor = const Color(0xFFF59E0B).withValues(alpha: 0.3);
+      leftStripeColor = isDark ? AppColors.darkSecondary : AppColors.lightSecondary;
+      borderColor = (isDark ? AppColors.darkSecondary : AppColors.lightSecondary).withValues(alpha: 0.3);
     }
 
     if (widget.task.isCompleted) {
-      cardBg = isDark ? const Color(0xFF0A110D) : const Color(0xFFF0FDF4);
-      borderColor = theme.colorScheme.primary.withValues(alpha: 0.2);
+      cardBg = isDark ? AppColors.greenDim : const Color(0xFFE8F5E9);
+      borderColor = (isDark ? AppColors.greenMid : AppColors.lightAccent).withValues(alpha: 0.3);
     }
 
     final hasSteps = widget.task.steps.isNotEmpty;
@@ -988,9 +992,9 @@ class _MissionCardWidgetState extends State<_MissionCardWidget> {
                                         ? theme.colorScheme.onSurface
                                               .withValues(alpha: 0.3)
                                         : (isBoss
-                                              ? const Color(0xFFA78BFA)
+                                              ? (isDark ? AppColors.darkTertiary : AppColors.lightTertiary)
                                               : (isSide
-                                                    ? const Color(0xFFF59E0B)
+                                                    ? (isDark ? AppColors.darkSecondary : AppColors.lightSecondary)
                                                     : theme
                                                           .colorScheme
                                                           .onSurface
@@ -1044,15 +1048,9 @@ class _MissionCardWidgetState extends State<_MissionCardWidget> {
                                             ? theme.colorScheme.primary
                                                   .withValues(alpha: 0.05)
                                             : (isBoss
-                                                  ? const Color(
-                                                      0xFF8B5CF6,
-                                                    ).withValues(alpha: 0.1)
+                                                  ? (isDark ? AppColors.purpleDim : AppColors.lightTertiary.withValues(alpha: 0.1))
                                                   : (isSide
-                                                        ? const Color(
-                                                            0xFFF59E0B,
-                                                          ).withValues(
-                                                            alpha: 0.1,
-                                                          )
+                                                        ? (isDark ? AppColors.amberDim : AppColors.lightSecondary.withValues(alpha: 0.1))
                                                         : theme
                                                               .colorScheme
                                                               .primary
@@ -1071,13 +1069,9 @@ class _MissionCardWidgetState extends State<_MissionCardWidget> {
                                                   ? theme.colorScheme.primary
                                                         .withValues(alpha: 0.3)
                                                   : (isBoss
-                                                        ? const Color(
-                                                            0xFFA78BFA,
-                                                          )
+                                                        ? (isDark ? AppColors.darkTertiary : AppColors.lightTertiary)
                                                         : (isSide
-                                                              ? const Color(
-                                                                  0xFFF59E0B,
-                                                                )
+                                                              ? (isDark ? AppColors.darkSecondary : AppColors.lightSecondary)
                                                               : theme
                                                                     .colorScheme
                                                                     .primary)),

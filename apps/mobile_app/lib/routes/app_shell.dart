@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:ezecute/core/theme/app_colors.dart';
-import 'package:ezecute/features/friends/leaderboard_page.dart';
+import 'package:ezecute/features/profile/profile_page.dart';
 import 'package:ezecute/features/home/home_page.dart';
 import 'package:ezecute/features/chat/chat_page.dart';
 import 'package:ezecute/features/planning/arena_page.dart';
@@ -76,26 +76,34 @@ class _PlanButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     return GestureDetector(
       onTap: () {
         HapticFeedback.mediumImpact();
         onTap();
       },
-      child: Container(
-        width: 44.w,
-        height: 44.w,
-        decoration: BoxDecoration(
-          color: theme.colorScheme.primary,
-          borderRadius: BorderRadius.circular(12.r),
-          boxShadow: [
-            BoxShadow(
-              color: theme.colorScheme.primary.withValues(alpha: 0.2),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+      child: Transform.translate(
+        offset: Offset(0, -12.h),
+        child: Container(
+          width: 48.w,
+          height: 48.w,
+          decoration: BoxDecoration(
+            color: theme.colorScheme.primary,
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: isDark ? AppColors.darkBg : AppColors.lightBg,
+              width: 3.w,
             ),
-          ],
+            boxShadow: [
+              BoxShadow(
+                color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                blurRadius: 20,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: Icon(LucideIcons.plus, color: Colors.white, size: 24.sp),
         ),
-        child: Icon(LucideIcons.plus, color: Colors.white, size: 24.sp),
       ),
     );
   }
@@ -119,7 +127,7 @@ class _NavBarItem extends StatelessWidget {
 
     final activeColor = theme.colorScheme.primary;
     final inactiveColor = isDark
-        ? AppColors.darkTextSecondary
+        ? AppColors.darkTextMuted
         : AppColors.lightTextSecondary;
 
     return InkWell(
@@ -127,21 +135,21 @@ class _NavBarItem extends StatelessWidget {
         HapticFeedback.lightImpact();
         onTap();
       },
-      borderRadius: BorderRadius.circular(12.r),
+      borderRadius: BorderRadius.circular(10.r),
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
+        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
                   item.icon,
-                  size: 22.sp,
+                  size: 19.sp,
                   color: isSelected ? activeColor : inactiveColor,
                 )
                 .animate(target: isSelected ? 1 : 0)
                 .scale(
                   begin: const Offset(1, 1),
-                  end: const Offset(1.1, 1.1),
+                  end: const Offset(1.05, 1.05),
                   duration: 200.ms,
                   curve: Curves.easeOutBack,
                 ),
@@ -151,7 +159,8 @@ class _NavBarItem extends StatelessWidget {
               style: theme.textTheme.labelSmall?.copyWith(
                 color: isSelected ? activeColor : inactiveColor,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                fontSize: 10.sp,
+                fontSize: 9.sp,
+                letterSpacing: 0.5,
               ),
             ),
           ],
@@ -191,21 +200,21 @@ class _AppShellState extends State<AppShell> {
     super.initState();
     _navItems = const [
       NavItem(
-        icon: LucideIcons.layoutDashboard,
+        icon: LucideIcons.layoutGrid,
         label: 'Dashboard',
         page: HomePage(),
       ),
       NavItem(icon: LucideIcons.swords, label: 'Arena', page: ArenaPage()),
       NavItem(icon: LucideIcons.plus, label: 'Plan', page: PlanningPage()),
       NavItem(
-        icon: LucideIcons.trophy,
-        label: 'Leaderboard',
-        page: LeaderboardPage(),
+        icon: LucideIcons.circleDot,
+        label: 'Coach',
+        page: AiCoachPage(),
       ),
       NavItem(
-        icon: LucideIcons.sparkles,
-        label: 'AI Chat',
-        page: AiCoachPage(),
+        icon: LucideIcons.user,
+        label: 'Profile',
+        page: ProfilePage(),
       ),
     ];
   }

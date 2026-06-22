@@ -7,7 +7,7 @@ import 'package:ezecute/data/app_data_store.dart';
 import 'package:ezecute/features/auth/auth_page.dart';
 import 'package:ezecute/features/planning/planning_page.dart';
 import 'package:ezecute/features/planning/timeline_page.dart';
-import 'package:ezecute/features/profile/profile_page.dart';
+import 'package:ezecute/features/friends/leaderboard_page.dart';
 import 'package:ezecute/features/profile/xp_history_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -282,11 +282,11 @@ class _HomePageState extends State<HomePage> {
       ),
       actions: [
         IconButton(
-          icon: Icon(LucideIcons.user, color: theme.colorScheme.onSurface),
+          icon: Icon(LucideIcons.trophy, color: theme.colorScheme.onSurface),
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const ProfilePage()),
+              MaterialPageRoute(builder: (_) => const LeaderboardPage()),
             );
           },
         ),
@@ -312,14 +312,15 @@ class _HomePageState extends State<HomePage> {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: isDark
-                ? [const Color(0xFF231E18), const Color(0xFF1E1A14)]
-                : [const Color(0xFFFBF4EE), const Color(0xFFF5EAE0)],
+                ? [const Color(0xFF0D1A13), const Color(0xFF0A1A10)]
+                : [const Color(0xFFE8F5E9), const Color(0xFFC8E6C9)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+            color: isDark ? AppColors.greenMid : AppColors.lightAccent.withValues(alpha: 0.3),
+            width: 0.5,
           ),
         ),
         child: Column(
@@ -555,10 +556,10 @@ class _HomePageState extends State<HomePage> {
     Color getGoalColor(String category, int index) {
       final List<Color> colors = [
         theme.colorScheme.primary,
-        const Color(0xFFF59E0B),
-        const Color(0xFF8B5CF6),
-        const Color(0xFFEF4444),
-        const Color(0xFF10B981),
+        theme.colorScheme.secondary,
+        theme.colorScheme.tertiary,
+        theme.colorScheme.error,
+        theme.colorScheme.primary,
       ];
       return colors[index % colors.length];
     }
@@ -1784,14 +1785,15 @@ class _SuccessProbabilitySliderState extends State<_SuccessProbabilitySlider> {
         onTap: () => widget.onTapGoal(goal),
         child: Container(
           margin: hasMargin
-              ? const EdgeInsets.symmetric(horizontal: 20)
+              ? EdgeInsets.symmetric(horizontal: 20.w)
               : EdgeInsets.zero,
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
           decoration: BoxDecoration(
             color: theme.cardTheme.color,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(16.r),
             border: Border.all(
               color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+              width: 0.5,
             ),
           ),
           child: Column(
@@ -1899,7 +1901,7 @@ class _SuccessProbabilitySliderState extends State<_SuccessProbabilitySlider> {
         MediaQuery.maybeTextScalerOf(context)?.scale(1.0) ??
         MediaQuery.maybeOf(context)?.textScaleFactor ??
         1.0;
-    final pageViewHeight = 170.h * textScale;
+    final pageViewHeight = 170 * textScale;
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
@@ -2095,17 +2097,17 @@ class _HomeMissionCardWidgetState extends State<_HomeMissionCardWidget> {
     BorderStyle borderStyle = BorderStyle.solid;
 
     if (isBoss) {
-      leftStripeColor = const Color(0xFF8B5CF6);
-      cardBg = isDark ? const Color(0xFF0F0B1E) : const Color(0xFFF5F3FF);
-      borderColor = const Color(0xFF8B5CF6).withValues(alpha: 0.3);
+      leftStripeColor = isDark ? AppColors.darkTertiary : AppColors.lightTertiary;
+      cardBg = isDark ? AppColors.purpleDim : const Color(0xFFF5F2FC);
+      borderColor = (isDark ? AppColors.darkTertiary : AppColors.lightTertiary).withValues(alpha: 0.3);
     } else if (isSide) {
-      leftStripeColor = const Color(0xFFF59E0B);
-      borderColor = const Color(0xFFF59E0B).withValues(alpha: 0.3);
+      leftStripeColor = isDark ? AppColors.darkSecondary : AppColors.lightSecondary;
+      borderColor = (isDark ? AppColors.darkSecondary : AppColors.lightSecondary).withValues(alpha: 0.3);
     }
 
     if (widget.task.isCompleted) {
-      cardBg = isDark ? const Color(0xFF0A110D) : const Color(0xFFF0FDF4);
-      borderColor = theme.colorScheme.primary.withValues(alpha: 0.2);
+      cardBg = isDark ? AppColors.greenDim : const Color(0xFFE8F5E9);
+      borderColor = (isDark ? AppColors.greenMid : AppColors.lightAccent).withValues(alpha: 0.3);
     }
 
     final hasSteps = widget.task.steps.isNotEmpty;
@@ -2204,9 +2206,9 @@ class _HomeMissionCardWidgetState extends State<_HomeMissionCardWidget> {
                                         ? theme.colorScheme.onSurface
                                               .withValues(alpha: 0.3)
                                         : (isBoss
-                                              ? const Color(0xFFA78BFA)
+                                              ? (isDark ? AppColors.darkTertiary : AppColors.lightTertiary)
                                               : (isSide
-                                                    ? const Color(0xFFF59E0B)
+                                                    ? (isDark ? AppColors.darkSecondary : AppColors.lightSecondary)
                                                     : theme
                                                           .colorScheme
                                                           .onSurface
@@ -2256,15 +2258,9 @@ class _HomeMissionCardWidgetState extends State<_HomeMissionCardWidget> {
                                             ? theme.colorScheme.primary
                                                   .withValues(alpha: 0.05)
                                             : (isBoss
-                                                  ? const Color(
-                                                      0xFF8B5CF6,
-                                                    ).withValues(alpha: 0.1)
+                                                  ? (isDark ? AppColors.purpleDim : AppColors.lightTertiary.withValues(alpha: 0.1))
                                                   : (isSide
-                                                        ? const Color(
-                                                            0xFFF59E0B,
-                                                          ).withValues(
-                                                            alpha: 0.1,
-                                                          )
+                                                        ? (isDark ? AppColors.amberDim : AppColors.lightSecondary.withValues(alpha: 0.1))
                                                         : theme
                                                               .colorScheme
                                                               .primary
@@ -2283,13 +2279,9 @@ class _HomeMissionCardWidgetState extends State<_HomeMissionCardWidget> {
                                                   ? theme.colorScheme.primary
                                                         .withValues(alpha: 0.3)
                                                   : (isBoss
-                                                        ? const Color(
-                                                            0xFFA78BFA,
-                                                          )
+                                                        ? (isDark ? AppColors.darkTertiary : AppColors.lightTertiary)
                                                         : (isSide
-                                                              ? const Color(
-                                                                  0xFFF59E0B,
-                                                                )
+                                                              ? (isDark ? AppColors.darkSecondary : AppColors.lightSecondary)
                                                               : theme
                                                                     .colorScheme
                                                                     .primary)),

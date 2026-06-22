@@ -124,6 +124,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
       final updatedResult = Map<String, dynamic>.from(_aiResult!);
       updatedResult['plan'] = result['plan'];
       
+      setState(() {
+        _aiResult = updatedResult;
+      });
+      
       if (mounted) {
         Navigator.push(
           context,
@@ -161,6 +165,9 @@ class _OnboardingPageState extends State<OnboardingPage> {
       );
       final updatedResult = Map<String, dynamic>.from(_aiResult!);
       updatedResult['plan'] = result['plan'];
+      setState(() {
+        _aiResult = updatedResult;
+      });
       return updatedResult;
     } catch (e) {
       if (mounted) {

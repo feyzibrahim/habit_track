@@ -1,62 +1,71 @@
-# App Design System & Color Palette
+# Execut App Design System & Color Palette
 
-This document outlines the core design tokens and color palette for the application, specifically inspired by the clean, sophisticated, and warm aesthetics of the Claude UI.
+This document outlines the core design tokens, typography, and color palettes for the Execut habit tracker application.
 
 ## Overview
-The design prioritizes readability, minimalism, and a warm, inviting feel. Instead of using harsh pure blacks (`#000000`), pure whites (`#FFFFFF`), or cold blue-grays, this palette utilizes **warm grays**, **eggshell/paper tones**, and a **signature terracotta/peach accent** to create a highly premium and comfortable reading experience.
+The design prioritizes a high-contrast, premium tech aesthetic with a pitch-black background, structured dark card layouts, and vibrant functional accents (emerald green, warm amber, violet purple). This design matches the look and feel established in `temp.html`.
 
 ---
 
 ## 🎨 Color Palette
 
+### 🌙 Dark Mode (Primary Mode)
+*A sleek, dark, premium interface with rich accent glows.*
+
+| Token | Color (Hex) | Description |
+| :--- | :--- | :--- |
+| **Background (Main)** | `#080808` | Pitch black background to minimize screen glare and highlight neon elements. |
+| **Surface (Cards/Tabs)** | `#111111` | Primary cards, stats boxes, and elevated surfaces. |
+| **Surface Level 2** | `#181818` | Slightly lighter dark background for banners, secondary tabs, or nested list cards. |
+| **Surface Level 3** | `#1E1E1E` | Used for active/hover states or input borders. |
+| **Primary Text** | `#F0F0EE` | Off-white text to provide high readability without harshness. |
+| **Secondary Text** | `#777777` | Medium gray for helper text, labels, and timestamps. |
+| **Muted Text / Border** | `#3A3A3A` | Very dark gray for deeply secondary indicators and background text. |
+| **Border / Divider** | `#1E1E1E` | Subtle separations between screens and components. |
+| **Primary Accent (Green)** | `#1D9E75` | Emerald green for primary actions, success status, level completion, and active navigation. |
+| **Secondary Accent (Amber)** | `#D4850A` | Warm gold/amber for side quests and pending actions. |
+| **Tertiary Accent (Purple)** | `#7C6FCD` | Violet purple for Boss Challenges. |
+| **Error / Destructive (Red)** | `#C94040` | Crimson red for destructive actions and warning statuses. |
+
+#### Accompanying Dim/Mid Colors (for Dark Mode card backgrounds & borders):
+- **Green Dim / Mid:** `#0A2A1E` / `#0F5A3F` (Used for completed/positive card backgrounds and glows)
+- **Amber Dim:** `#2A1A00` (Used for side quest card status highlights)
+- **Purple Dim:** `#1A1530` (Used for boss challenge card styling)
+- **Red Dim:** `#2A0F0F` (Used for failure risk cards)
+
+---
+
 ### 🌞 Light Mode
-_A bright, clean, and paper-like aesthetic._
+*A clean, high-contrast light counterpart.*
 
 | Token | Color (Hex) | Description |
 | :--- | :--- | :--- |
-| **Background (Main)** | `#FDFBF7` | A very warm, off-white (paper-like) background for the main canvas. |
-| **Surface (Cards/Inputs)**| `#F3F2EF` | A slightly darker warm gray for cards, input fields, and elevated elements. |
-| **Primary Text** | `#1F1E1C` | Soft charcoal. High contrast for readability without the harshness of pure black. |
-| **Secondary Text** | `#696763` | Muted, warm medium-gray for subtitles, timestamps, and placeholder text. |
-| **Border / Divider** | `#E6E4DF` | Subtle borders to separate content without creating visual noise. |
-| **Primary Accent** | `#DA7756` | The signature terracotta/peach accent color for primary buttons and active states. |
-| **Secondary Accent / Link**| `#3A6962` | A sophisticated muted sage/teal used for secondary actions or links. |
-| **Error / Destructive** | `#B73D35` | A muted red for error states to maintain the sophisticated muted tone. |
-
-### 🌙 Dark Mode
-_A deep, warm, and comfortable dark aesthetic. Avoids pure black._
-
-| Token | Color (Hex) | Description |
-| :--- | :--- | :--- |
-| **Background (Main)** | `#1F1E1C` | The primary background. Matches the primary text of light mode. Very dark warm charcoal. |
-| **Surface (Cards/Inputs)**| `#2D2C2A` | Elevated surface background for inputs, chat bubbles, and modal cards. |
-| **Primary Text** | `#F3F2EF` | Warm off-white. Easy on the eyes for long reading sessions. |
-| **Secondary Text** | `#A3A19D` | Lighter warm gray for secondary information and placeholders. |
-| **Border / Divider** | `#3C3B39` | Subtle delineations between dark components. |
-| **Primary Accent** | `#E28A6F` | A slightly brightened terracotta/peach for better contrast on dark backgrounds. |
-| **Secondary Accent / Link**| `#588B83` | Lightened sage/teal for dark mode readibility. |
-| **Error / Destructive** | `#D45B53` | Softened red for standard contrast accessibility. |
+| **Background (Main)** | `#FAFAFA` | Off-white canvas. |
+| **Surface (Cards)** | `#FFFFFF` | Pure white cards. |
+| **Surface Level 2** | `#F0F0F0` | Cool gray for text fields and layout containers. |
+| **Primary Text** | `#080808` | High contrast charcoal black. |
+| **Secondary Text** | `#777777` | Muted cool gray. |
+| **Border / Divider** | `#E5E5E5` | Clean, subtle borders. |
+| **Primary Accent (Green)** | `#1D9E75` | Emerald green for active actions and main buttons. |
+| **Secondary Accent (Amber)** | `#D4850A` | Gold/Amber for warning/pending actions. |
+| **Tertiary Accent (Purple)** | `#7C6FCD` | Violet purple for special items. |
+| **Error / Destructive** | `#C94040` | Clean red for errors. |
 
 ---
 
 ## 📐 Typography & Spacing
 
-To fully match the sophisticated feel:
+To create a premium tech-oriented interface:
 
-- **Typefaces:** 
-  - *Primary (Sans-serif):* `Inter`, `System UI`, or `Geist` (for extreme clarity and modern feel).
-  - *Serif (Optional for long reading):* `Fraunces` or `Merriweather` (for a more editorial look, often used in Claude's long-form output).
-- **Line Height:** 
-  - Standardize on `1.5` or `1.6` for optimal text readability.
-- **Border Radius:** 
-  - Use smooth, subtle rounding. e.g., `8px` or `12px` for cards and input fields. Avoid overly pill-shaped buttons unless specifically desired for a friendly touch.
-- **Shadows:** 
-  - Keep drop shadows exceptionally faint and diffuse, preferring borders or slight background color contrast to delineate hierarchy.
-
----
-
-## 🧩 Usage Guidelines
-
-1. **Hierarchy over decoration:** Use the accent color sparingly. Only apply the `Primary Accent` to the most important call-to-action (CTA) on the screen (e.g., the "Send" button in a chat interface, or "Save" in a form).
-2. **Embrace whitespace:** Ensure there is ample padding around text blocks and between distinct sections. Clutter destroys the premium feel.
-3. **Soft transitions:** When switching themes or hovering over elements, use subtle CSS transitions (`transition: all 0.2s ease-in-out;`) to make the interface feel responsive and alive.
+- **Typefaces:**
+  - *Display / Titles / Logo / Key Stats:* `Syne` (vibrant, modern geometric sans-serif for striking headers).
+  - *Body / Long Text / Messages:* `DM Sans` (highly legible geometric sans-serif).
+  - *Status Labels / Levels / Timelines:* `DM Mono` (monospaced look for stats-driven execution elements).
+- **Border Radius:**
+  - Standard cards and container elements use `14px` (`--radius`).
+  - Small chips, status badges, and sub-cards use `10px` (`--radius-sm`).
+  - Input fields use `12px`.
+  - Profile icons and circle indicators are `50%` rounded.
+- **Borders & Shadows:**
+  - All elements use explicit `0.5px` or `1px` borders instead of heavy drop shadows.
+  - Accent colors use subtle glow glows (e.g., `rgba(29, 158, 117, 0.12)`) to convey elevation.
