@@ -408,69 +408,90 @@ class _PlanningPageState extends State<PlanningPage> {
 
         _buildSectionTitle(context, "START DATE"),
         const SizedBox(height: 12),
-        GestureDetector(
-          onTap: () async {
-            HapticFeedback.selectionClick();
-            final DateTime? picked = await showDatePicker(
-              context: context,
-              initialDate: _startDate,
-              firstDate: DateTime.now().subtract(const Duration(days: 1)),
-              lastDate: DateTime.now().add(const Duration(days: 365)),
-              builder: (context, child) {
-                return Theme(
-                  data: theme.copyWith(
-                    colorScheme: isDark ? const ColorScheme.dark(
-                      primary: AppColors.darkAccent,
-                      onPrimary: Colors.white,
-                      surface: AppColors.darkSurface,
-                      onSurface: Colors.white,
-                    ) : const ColorScheme.light(
-                      primary: AppColors.lightAccent,
-                      onPrimary: Colors.white,
-                      surface: Colors.white,
-                      onSurface: Colors.black,
+        Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: () async {
+              HapticFeedback.selectionClick();
+              final DateTime? picked = await showDatePicker(
+                context: context,
+                initialDate: _startDate,
+                firstDate: DateTime.now().subtract(const Duration(days: 1)),
+                lastDate: DateTime.now().add(const Duration(days: 365)),
+                builder: (context, child) {
+                  return Theme(
+                    data: theme.copyWith(
+                      colorScheme: isDark ? const ColorScheme.dark(
+                        primary: AppColors.darkAccent,
+                        onPrimary: Colors.white,
+                        surface: AppColors.darkSurface,
+                        onSurface: Colors.white,
+                      ) : const ColorScheme.light(
+                        primary: AppColors.lightAccent,
+                        onPrimary: Colors.white,
+                        surface: Colors.white,
+                        onSurface: Colors.black,
+                      ),
+                    ),
+                    child: child!,
+                  );
+                },
+              );
+              if (picked != null && picked != _startDate) {
+                setState(() {
+                  _startDate = picked;
+                });
+              }
+            },
+            child: Ink(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              decoration: BoxDecoration(
+                color: theme.cardTheme.color,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    LucideIcons.calendar,
+                    color: theme.colorScheme.primary,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    _startDate.year == DateTime.now().year && _startDate.month == DateTime.now().month && _startDate.day == DateTime.now().day
+                        ? "Today"
+                        : "${_startDate.day}/${_startDate.month}/${_startDate.year}",
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  child: child!,
-                );
-              },
-            );
-            if (picked != null && picked != _startDate) {
-              setState(() {
-                _startDate = picked;
-              });
-            }
-          },
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            decoration: BoxDecoration(
-              color: theme.cardTheme.color,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  LucideIcons.calendar,
-                  color: theme.colorScheme.primary,
-                  size: 20,
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  _startDate.year == DateTime.now().year && _startDate.month == DateTime.now().month && _startDate.day == DateTime.now().day
-                      ? "Today"
-                      : "${_startDate.day}/${_startDate.month}/${_startDate.year}",
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
+                  const SizedBox(width: 8),
+                  Icon(
+                    LucideIcons.chevronDown,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                    size: 16,
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ).animate().fade(delay: 700.ms).slideX(begin: 0.1),
+        const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: Text(
+            "Tap to change the start date",
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+            ),
+          ),
+        ).animate().fade(delay: 750.ms).slideX(begin: 0.1),
 
         const SizedBox(height: 48),
 

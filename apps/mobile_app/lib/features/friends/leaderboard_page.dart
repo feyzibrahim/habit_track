@@ -376,185 +376,193 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              const SizedBox(height: 24),
-              Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: rankColor, width: 3),
-                ),
-                child: CircleAvatar(
-                  radius: 40,
-                  backgroundColor: theme.colorScheme.surface,
-                  child: Text(
-                    displayName.isNotEmpty ? displayName[0].toUpperCase() : '?',
-                    style: TextStyle(
-                      color: rankColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 32,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                displayName,
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(LucideIcons.star, color: rankColor, size: 20),
-                  const SizedBox(width: 8),
-                  Text(
-                    "Level ${(user['score'] ~/ 100) + 1} • ${user['score']} XP",
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: rankColor,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 32),
               Expanded(
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: theme.cardTheme.color,
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(32),
-                    ),
-                  ),
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        "ACTIVE MISSIONS",
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 1.2,
-                          color: theme.colorScheme.onSurface.withValues(
-                            alpha: 0.5,
+                      const SizedBox(height: 24),
+                      Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: rankColor, width: 3),
+                        ),
+                        child: CircleAvatar(
+                          radius: 40,
+                          backgroundColor: theme.colorScheme.surface,
+                          child: Text(
+                            displayName.isNotEmpty ? displayName[0].toUpperCase() : '?',
+                            style: TextStyle(
+                              color: rankColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 32,
+                            ),
                           ),
                         ),
                       ),
                       const SizedBox(height: 16),
-                      if (activeMissions.isEmpty)
-                        Expanded(
-                          child: Center(
-                            child: Text(
-                              "No active missions right now.",
-                              style: TextStyle(
+                      Text(
+                        displayName,
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(LucideIcons.star, color: rankColor, size: 20),
+                          const SizedBox(width: 8),
+                          Text(
+                            "Level ${(user['score'] ~/ 100) + 1} • ${user['score']} XP",
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: rankColor,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 32),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: theme.cardTheme.color,
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(32),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "ACTIVE MISSIONS",
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 1.2,
                                 color: theme.colorScheme.onSurface.withValues(
                                   alpha: 0.5,
                                 ),
                               ),
                             ),
-                          ),
-                        )
-                      else
-                        Expanded(
-                          child: ListView.builder(
-                            physics: const BouncingScrollPhysics(),
-                            itemCount: activeMissions.length,
-                            itemBuilder: (context, idx) {
-                              final mission = activeMissions[idx];
-                              final progress =
-                                  (mission['progress'] as num?)?.toDouble() ??
-                                  0.0;
-                              return Container(
-                                margin: const EdgeInsets.only(bottom: 16),
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: theme.scaffoldBackgroundColor,
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(
-                                    color: theme.colorScheme.onSurface
-                                        .withValues(alpha: 0.05),
+                            const SizedBox(height: 16),
+                            if (activeMissions.isEmpty)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 40),
+                                child: Center(
+                                  child: Text(
+                                    "No active missions right now.",
+                                    style: TextStyle(
+                                      color: theme.colorScheme.onSurface.withValues(
+                                        alpha: 0.5,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
+                              )
+                            else
+                              ListView.builder(
+                                shrinkWrap: true,
+                                padding: EdgeInsets.zero,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: activeMissions.length,
+                                itemBuilder: (context, idx) {
+                                  final mission = activeMissions[idx];
+                                  final progress =
+                                      (mission['progress'] as num?)?.toDouble() ??
+                                      0.0;
+                                  return Container(
+                                    margin: const EdgeInsets.only(bottom: 16),
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: theme.scaffoldBackgroundColor,
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(
+                                        color: theme.colorScheme.onSurface
+                                            .withValues(alpha: 0.05),
+                                      ),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Expanded(
-                                          child: Text(
-                                            mission['title'] ??
-                                                'Unknown Mission',
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16,
-                                            ),
-                                          ),
-                                        ),
-                                        if (mission['durationDays'] != null)
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 8,
-                                              vertical: 4,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: theme.colorScheme.primary
-                                                  .withValues(alpha: 0.1),
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                            ),
-                                            child: Text(
-                                              "${mission['durationDays']}d",
-                                              style: TextStyle(
-                                                color:
-                                                    theme.colorScheme.primary,
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.bold,
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                mission['title'] ??
+                                                    'Unknown Mission',
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 16,
+                                                ),
                                               ),
                                             ),
-                                          ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: ClipRRect(
-                                            borderRadius: BorderRadius.circular(
-                                              4,
-                                            ),
-                                            child: LinearProgressIndicator(
-                                              value: progress,
-                                              minHeight: 8,
-                                              backgroundColor: theme
-                                                  .colorScheme
-                                                  .onSurface
-                                                  .withValues(alpha: 0.1),
-                                              valueColor:
-                                                  AlwaysStoppedAnimation<Color>(
-                                                    theme.colorScheme.primary,
+                                            if (mission['durationDays'] != null)
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(
+                                                  horizontal: 8,
+                                                  vertical: 4,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: theme.colorScheme.primary
+                                                      .withValues(alpha: 0.1),
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                ),
+                                                child: Text(
+                                                  "${mission['durationDays']}d",
+                                                  style: TextStyle(
+                                                    color:
+                                                        theme.colorScheme.primary,
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
                                                   ),
-                                            ),
-                                          ),
+                                                ),
+                                              ),
+                                          ],
                                         ),
-                                        const SizedBox(width: 12),
-                                        Text(
-                                          "${(progress * 100).toInt()}%",
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            color: theme.colorScheme.primary,
-                                          ),
+                                        const SizedBox(height: 12),
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: ClipRRect(
+                                                borderRadius: BorderRadius.circular(
+                                                  4,
+                                                ),
+                                                child: LinearProgressIndicator(
+                                                  value: progress,
+                                                  minHeight: 8,
+                                                  backgroundColor: theme
+                                                      .colorScheme
+                                                      .onSurface
+                                                      .withValues(alpha: 0.1),
+                                                  valueColor:
+                                                      AlwaysStoppedAnimation<Color>(
+                                                        theme.colorScheme.primary,
+                                                      ),
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Text(
+                                              "${(progress * 100).toInt()}%",
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: theme.colorScheme.primary,
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     ),
-                                  ],
-                                ),
-                              );
-                            },
-                          ),
+                                  );
+                                },
+                              ),
+                          ],
                         ),
+                      ),
                     ],
                   ),
                 ),
