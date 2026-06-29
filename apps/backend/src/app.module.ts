@@ -16,6 +16,8 @@ import { Friend } from './friends/friend.entity';
 import { FriendsModule } from './friends/friends.module';
 import { XpEvent } from './xp/xp-event.entity';
 import { XpModule } from './xp/xp.module';
+import { WaitlistUser } from './waitlist/waitlist-user.entity';
+import { WaitlistModule } from './waitlist/waitlist.module';
 
 @Module({
   imports: [
@@ -31,7 +33,7 @@ import { XpModule } from './xp/xp.module';
       username: process.env.DB_USER || 'postgres',
       password: process.env.DB_PASSWORD || 'postgres',
       database: process.env.DB_NAME || 'habit_track',
-      entities: [User, Goal, Milestone, ActionItem, TaskStep, Friend, XpEvent],
+      entities: [User, Goal, Milestone, ActionItem, TaskStep, Friend, XpEvent, WaitlistUser],
       synchronize: true, // Use only in development
       ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
     }),
@@ -41,6 +43,7 @@ import { XpModule } from './xp/xp.module';
     GoalsModule,
     FriendsModule,
     XpModule,
+    WaitlistModule,
   ],
   controllers: [AppController],
   providers: [AppService],

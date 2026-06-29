@@ -13,9 +13,9 @@ class ApiService {
 
     // In debug mode, use the appropriate local address
     if (!kIsWeb && Platform.isAndroid) {
-      return 'http://10.0.2.2:3000'; // Android emulator access
+      return 'http://10.0.2.2:3500'; // Android emulator access
     }
-    return 'http://localhost:3000'; // iOS/Desktop/Web access
+    return 'http://localhost:3500'; // iOS/Desktop/Web access
   }
 
   static String? _token;
@@ -478,7 +478,9 @@ class ApiService {
     int limit = 20,
   }) async {
     final res = await http.get(
-      Uri.parse('$baseUrl/friends/leaderboard?type=$type&page=$page&limit=$limit'),
+      Uri.parse(
+        '$baseUrl/friends/leaderboard?type=$type&page=$page&limit=$limit',
+      ),
       headers: _headers,
     );
     if (res.statusCode == 200) return jsonDecode(res.body) as List<dynamic>;
