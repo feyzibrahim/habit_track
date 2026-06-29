@@ -3,7 +3,7 @@
 This document outlines the core design tokens, typography, and color palettes for the Execut habit tracker application.
 
 ## Overview
-The design prioritizes a high-contrast, premium tech aesthetic with a pitch-black background, structured dark card layouts, and vibrant functional accents (emerald green, warm amber, violet purple). This design matches the look and feel established in `temp.html`.
+The design prioritizes a high-contrast, premium tech aesthetic with a pitch-black background, structured dark card layouts, and vibrant functional accents (emerald green, warm amber, violet purple).
 
 ---
 
@@ -22,9 +22,12 @@ The design prioritizes a high-contrast, premium tech aesthetic with a pitch-blac
 | **Secondary Text** | `#777777` | Medium gray for helper text, labels, and timestamps. |
 | **Muted Text / Border** | `#3A3A3A` | Very dark gray for deeply secondary indicators and background text. |
 | **Border / Divider** | `#1E1E1E` | Subtle separations between screens and components. |
-| **Primary Accent (Green)** | `#1D9E75` | Emerald green for primary actions, success status, level completion, and active navigation. |
+| **Border 2** | `#2A2A2A` | Secondary slightly lighter border. |
+| **Primary Accent (Green)** | `#1D9E75` | Emerald green for primary actions and active navigation. |
 | **Secondary Accent (Muted Green)** | `#5A8F76` | Muted green for side quests and secondary actions. |
 | **Tertiary Accent (Purple)** | `#7C6FCD` | Violet purple for Boss Challenges. |
+| **Success (Green)** | `#1D9E75` | Emerald green for success status and level completion. |
+| **Warning (Amber)** | `#D4850A` | Warm amber for warnings. |
 | **Error / Destructive (Red)** | `#C94040` | Crimson red for destructive actions and warning statuses. |
 
 #### Accompanying Dim/Mid Colors (for Dark Mode card backgrounds & borders):
@@ -49,6 +52,8 @@ The design prioritizes a high-contrast, premium tech aesthetic with a pitch-blac
 | **Primary Accent (Green)** | `#1D9E75` | Emerald green for active actions and main buttons. |
 | **Secondary Accent (Muted Green)** | `#436B59` | Muted green for side quests and secondary actions. |
 | **Tertiary Accent (Purple)** | `#7C6FCD` | Violet purple for special items. |
+| **Success (Green)** | `#1D9E75` | Emerald green for success status. |
+| **Warning (Amber)** | `#D4850A` | Warm amber for warnings. |
 | **Error / Destructive** | `#C94040` | Clean red for errors. |
 
 ---
