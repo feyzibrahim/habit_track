@@ -220,8 +220,6 @@ class _HomePageState extends State<HomePage> {
                       _buildStatsGrid(context, store),
                       _buildStreakWeek(context, store),
                       _buildDailyFocusSection(context, store),
-                      _buildSuccessProbabilityCard(context, store),
-                      _buildActiveGoalsSection(context, store),
                       const SliverToBoxAdapter(child: SizedBox(height: 100)),
                     ],
                   ],
