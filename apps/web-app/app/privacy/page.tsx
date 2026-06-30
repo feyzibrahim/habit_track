@@ -1,5 +1,3 @@
-import React from "react";
-
 export default function PrivacyPolicy() {
   return (
     <main className="min-h-screen bg-[#0a0a0a] text-white py-16 px-6 font-sans relative overflow-hidden">
@@ -58,12 +56,25 @@ export default function PrivacyPolicy() {
           <section>
             <h2 className="text-2xl font-bold text-white mb-4">5. Data Security</h2>
             <p>
-              We aim to protect your personal information through a system of organizational and technical security measures. However, no electronic transmission over the internet or information storage technology can be guaranteed to be 100% secure.
+              We aim to protect your personal information through a system of organizational and technical security measures, including encrypting all data in transit using industry-standard TLS/HTTPS protocols. However, no electronic transmission over the internet or information storage technology can be guaranteed to be 100% secure.
             </p>
           </section>
 
+          <section id="data-deletion">
+            <h2 className="text-2xl font-bold text-white mb-4">6. Data Deletion Requests</h2>
+            <p className="mb-4">
+              You have the right to request the deletion of your account and all associated data. If you would like to permanently delete your data from Execut, please click the link below to send us a request.
+            </p>
+            <a 
+              href="mailto:support@execut.pro?subject=Data%20Deletion%20Request&body=Please%20delete%20my%20account%20and%20all%20associated%20data.%0A%0AMy%20account%20email%20is%3A%20" 
+              className="inline-flex items-center justify-center bg-red-500/10 text-red-400 border border-red-500/20 px-6 py-3 rounded-xl font-semibold hover:bg-red-500/20 transition-colors mt-2"
+            >
+              Request Data Deletion
+            </a>
+          </section>
+
           <section>
-            <h2 className="text-2xl font-bold text-white mb-4">6. Contact Us</h2>
+            <h2 className="text-2xl font-bold text-white mb-4">7. Contact Us</h2>
             <p>
               If you have questions or comments about this policy, you may email us at support@execut.pro.
             </p>
