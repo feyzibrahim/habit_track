@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:ezecute/features/auth/auth_page.dart';
-import 'package:ezecute/core/api/api_service.dart';
+import 'package:execut/features/auth/auth_page.dart';
+import 'package:execut/core/api/api_service.dart';
 
-import 'package:ezecute/features/profile/missions_page.dart';
-import 'package:ezecute/features/profile/settings_page.dart';
-import 'package:ezecute/features/profile/privacy_page.dart';
-import 'package:ezecute/features/profile/notifications_page.dart';
-import 'package:ezecute/features/friends/friends_page.dart';
-import 'package:ezecute/features/friends/leaderboard_page.dart';
-import 'package:ezecute/data/app_data_store.dart';
+import 'package:execut/features/profile/missions_page.dart';
+import 'package:execut/features/profile/settings_page.dart';
+import 'package:execut/features/profile/privacy_page.dart';
+import 'package:execut/features/profile/notifications_page.dart';
+import 'package:execut/features/friends/friends_page.dart';
+import 'package:execut/features/friends/leaderboard_page.dart';
+import 'package:execut/data/app_data_store.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:ezecute/features/profile/xp_history_page.dart';
+import 'package:execut/features/profile/xp_history_page.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});

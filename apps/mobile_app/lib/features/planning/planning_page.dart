@@ -1,6 +1,6 @@
-import 'package:ezecute/core/api/api_service.dart';
-import 'package:ezecute/core/theme/app_colors.dart';
-import 'package:ezecute/data/app_data_store.dart';
+import 'package:execut/core/api/api_service.dart';
+import 'package:execut/core/theme/app_colors.dart';
+import 'package:execut/data/app_data_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';

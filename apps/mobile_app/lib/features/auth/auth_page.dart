@@ -1,7 +1,7 @@
-import 'package:ezecute/core/api/api_service.dart';
-import 'package:ezecute/data/app_data_store.dart';
-import 'package:ezecute/features/onboarding/onboarding_page.dart';
-import 'package:ezecute/routes/app_shell.dart';
+import 'package:execut/core/api/api_service.dart';
+import 'package:execut/data/app_data_store.dart';
+import 'package:execut/features/onboarding/onboarding_page.dart';
+import 'package:execut/routes/app_shell.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';

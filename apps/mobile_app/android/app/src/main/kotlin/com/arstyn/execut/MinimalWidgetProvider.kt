@@ -1,4 +1,4 @@
-package com.app.ezecute
+package com.arstyn.execut
 
 import android.appwidget.AppWidgetManager
 import android.content.Context

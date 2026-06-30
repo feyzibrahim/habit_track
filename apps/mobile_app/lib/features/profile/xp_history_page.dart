@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:ezecute/data/app_data_store.dart';
-import 'package:ezecute/core/theme/app_colors.dart';
+import 'package:execut/data/app_data_store.dart';
+import 'package:execut/core/theme/app_colors.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 
-import 'package:ezecute/core/models/xp_event_model.dart';
+import 'package:execut/core/models/xp_event_model.dart';
 
 class XpHistoryPage extends StatefulWidget {
   const XpHistoryPage({super.key});

@@ -1,4 +1,4 @@
-package com.app.ezecute
+package com.arstyn.execut
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:ezecute/core/theme/app_colors.dart';
-import 'package:ezecute/features/profile/profile_page.dart';
-import 'package:ezecute/features/home/home_page.dart';
-import 'package:ezecute/features/chat/chat_page.dart';
-import 'package:ezecute/features/planning/arena_page.dart';
-import 'package:ezecute/features/planning/planning_page.dart';
+import 'package:execut/core/theme/app_colors.dart';
+import 'package:execut/features/profile/profile_page.dart';
+import 'package:execut/features/home/home_page.dart';
+import 'package:execut/features/chat/chat_page.dart';
+import 'package:execut/features/planning/arena_page.dart';
+import 'package:execut/features/planning/planning_page.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class NavItem {

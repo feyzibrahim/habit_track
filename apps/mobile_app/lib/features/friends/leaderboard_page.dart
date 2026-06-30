@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:ezecute/core/api/api_service.dart';
-import 'package:ezecute/core/theme/app_colors.dart';
-import 'package:ezecute/data/app_data_store.dart';
+import 'package:execut/core/api/api_service.dart';
+import 'package:execut/core/theme/app_colors.dart';
+import 'package:execut/data/app_data_store.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:ezecute/features/auth/auth_page.dart';
+import 'package:execut/features/auth/auth_page.dart';
 import 'dart:ui' as ui;
 import 'dart:io';
 import 'package:flutter/services.dart';

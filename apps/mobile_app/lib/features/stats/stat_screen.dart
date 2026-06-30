@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:ezecute/core/theme/app_colors.dart';
-import 'package:ezecute/data/app_data_store.dart';
+import 'package:execut/core/theme/app_colors.dart';
+import 'package:execut/data/app_data_store.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class StatScreen extends StatefulWidget {

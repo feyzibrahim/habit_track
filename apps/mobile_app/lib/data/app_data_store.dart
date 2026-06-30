@@ -1,7 +1,7 @@
-import 'package:ezecute/core/api/api_service.dart';
-import 'package:ezecute/core/models/goal_model.dart' as goals;
-import 'package:ezecute/features/home/mission_widget_view.dart';
-import 'package:ezecute/core/models/xp_event_model.dart';
+import 'package:execut/core/api/api_service.dart';
+import 'package:execut/core/models/goal_model.dart' as goals;
+import 'package:execut/features/home/mission_widget_view.dart';
+import 'package:execut/core/models/xp_event_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io' show Platform;
