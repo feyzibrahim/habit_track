@@ -795,10 +795,11 @@ class _ActionMiniRowState extends State<_ActionMiniRow> {
         }
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text("Error: $e")));
+      }
     } finally {
       if (mounted) setState(() => _isGenerating = false);
     }
@@ -815,7 +816,9 @@ class _ActionMiniRowState extends State<_ActionMiniRow> {
 
     return AnimatedCrossFade(
       duration: const Duration(milliseconds: 350),
-      crossFadeState: _isTransitioning ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+      crossFadeState: _isTransitioning
+          ? CrossFadeState.showSecond
+          : CrossFadeState.showFirst,
       secondChild: const SizedBox(width: double.infinity, height: 0),
       firstChild: Container(
         margin: const EdgeInsets.only(top: 8),
@@ -863,14 +866,14 @@ class _ActionMiniRowState extends State<_ActionMiniRow> {
                       );
                       return;
                     }
-                    
+
                     setState(() {
                       _isTransitioning = true;
                     });
-                    
+
                     await Future.delayed(const Duration(milliseconds: 350));
                     if (!mounted) return;
-                    
+
                     AppDataStore().toggleActionItem(
                       widget.action.id,
                       widget.action.isCompleted,
@@ -918,9 +921,13 @@ class _ActionMiniRowState extends State<_ActionMiniRow> {
                           fontWeight: FontWeight.w600,
                           fontSize: 12,
                           color: isDone
-                              ? theme.colorScheme.onSurface.withValues(alpha: 0.4)
+                              ? theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.4,
+                                )
                               : theme.colorScheme.onSurface,
-                          decoration: isDone ? TextDecoration.lineThrough : null,
+                          decoration: isDone
+                              ? TextDecoration.lineThrough
+                              : null,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -953,9 +960,8 @@ class _ActionMiniRowState extends State<_ActionMiniRow> {
                                     vertical: 1,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: theme.colorScheme.onSurface.withValues(
-                                      alpha: 0.1,
-                                    ),
+                                    color: theme.colorScheme.onSurface
+                                        .withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Text(
@@ -1040,7 +1046,9 @@ class _ActionMiniRowState extends State<_ActionMiniRow> {
                     ),
                   ]
                 : widget.action.steps
-                      .map((step) => _buildStepRow(context, widget.action, step))
+                      .map(
+                        (step) => _buildStepRow(context, widget.action, step),
+                      )
                       .toList(),
           ),
         ),
@@ -1101,13 +1109,14 @@ class _GenerateTasksButtonState extends State<_GenerateTasksButton> {
     try {
       await AppDataStore().generateTasksForMilestone(widget.milestoneId);
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text("Failed to generate tasks."),
             backgroundColor: Colors.redAccent,
           ),
         );
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

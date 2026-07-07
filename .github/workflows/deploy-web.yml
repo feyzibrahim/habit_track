@@ -1,0 +1,42 @@
+name: Deploy Flutter Web to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.10.3' # Matches the project's SDK requirements
+          channel: 'stable'
+
+      - name: Install Dependencies
+        working-directory: apps/mobile_app
+        run: flutter pub get
+
+      - name: Build Web
+        working-directory: apps/mobile_app
+        run: flutter build web --release --base-href "/habit_track/"
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: apps/mobile_app/build/web
+          branch: gh-pages # Deploys the built files to a gh-pages branch
