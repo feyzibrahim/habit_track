@@ -24,7 +24,6 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.10.3' # Matches the project's SDK requirements
           channel: 'stable'
 
       - name: Install Dependencies
